@@ -1,0 +1,98 @@
+#!/usr/bin/env python3
+
+# tsu - time series utility
+
+import os
+import csv
+from datetime import datetime
+
+# Define and catch our own exception to avoid intercepting language and library exceptions.
+class ValidationError(Exception):
+    pass
+
+def parse(entry, int_val=True):
+    if len(entry) != 2:
+        raise ValidationError("entry must have exactly 2 fields: " + str(entry))
+    s1, s2 = entry
+    try:
+        tsi = int(s1)
+    except ValueError as e:
+        raise ValidationError("timestamp is not an integer: '{}'".format(s1)) from e
+    try:
+        dt = datetime.utcfromtimestamp(tsi)
+    except Exception as e:
+        raise ValidationError("cannot parse datetime from timestamp: '{}'".format(tsi)) from e
+    if int_val:
+        try:
+            val = int(s2)
+        except ValueError as e:
+            raise ValidationError("value is not an integer: '{}'".format(s2)) from e
+    else:
+        if len(s2) > 0:
+            val = s2
+        else:
+            raise ValidationError("value is empty")
+    return dt, val
+
+STRING_VALUE_FILES = frozenset(["errors.csv"])
+
+def validate(path, view=False):
+    with open(path, newline='') as csvfile:
+        r = csv.reader(csvfile)
+        int_values = os.path.basename(path) not in STRING_VALUE_FILES
+        prev_dt = datetime.min
+        for row in r:
+            try:
+                dt, val = parse(row, int_values)
+                if dt <= prev_dt:
+                    raise ValidationError("timestamp '{}' must be greater than '{}'".format(dt, prev_dt))
+                prev_dt = dt
+                if view:
+                    if int_values:
+                        print(dt, "{:>6,}".format(val))
+                    else:
+                        print(dt, val)
+            except ValidationError as e:
+                print("err {}:{}: {}".format(path, r.line_num, e))
+
+def cmd_view(args):
+    validate(args.file, True)
+
+def cmd_validate(args):
+    path = args.path
+    if os.path.isfile(path):
+        validate(path)
+    elif os.path.isdir(path):
+        for curdir, dirs, files in os.walk(path):
+            for fname in files:
+                if fname.endswith(".csv"):
+                    validate(os.path.join(curdir, fname))
+
+DEFAULT_DATA_DIR = "data"
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="time series utility")
+    subparsers = parser.add_subparsers(dest="command", title="commands")
+
+    parser_validate = subparsers.add_parser("validate", help="validate time series files")
+    parser_validate.add_argument("path", nargs='?', default=DEFAULT_DATA_DIR, help="path to validate")
+    parser_validate.set_defaults(func=cmd_validate)
+
+    parser_view = subparsers.add_parser("view", help="view time series file")
+    parser_view.add_argument("file", help="file to view")
+    parser_view.set_defaults(func=cmd_view)
+
+    args = parser.parse_args()
+
+    if args.command:
+        try:
+            args.func(args)
+        except BrokenPipeError:
+            # silence error when e.g. piping into `less` and quitting before reading all
+            pass
+    else:
+        parser.print_usage()
+
+if __name__ == "__main__":
+    main()
