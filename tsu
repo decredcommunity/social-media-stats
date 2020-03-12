@@ -6,6 +6,9 @@ import os
 import csv
 from datetime import datetime
 
+class Config:
+    data_dir = "data"
+
 # Define and catch our own exception to avoid intercepting language and library exceptions.
 class ValidationError(Exception):
     pass
@@ -68,15 +71,13 @@ def cmd_validate(args):
                 if fname.endswith(".csv"):
                     validate(os.path.join(curdir, fname))
 
-DEFAULT_DATA_DIR = "data"
-
 def make_arg_parser():
     import argparse
     parser = argparse.ArgumentParser(description="time series utility")
     subparsers = parser.add_subparsers(dest="command", title="commands")
 
     parser_validate = subparsers.add_parser("validate", help="validate time series files")
-    parser_validate.add_argument("path", nargs='?', default=DEFAULT_DATA_DIR, help="path to validate")
+    parser_validate.add_argument("path", nargs='?', default=Config.data_dir, help="path to validate")
     parser_validate.set_defaults(func=cmd_validate)
 
     parser_view = subparsers.add_parser("view", help="view time series file")
