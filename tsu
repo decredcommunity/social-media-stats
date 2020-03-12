@@ -70,7 +70,7 @@ def cmd_validate(args):
 
 DEFAULT_DATA_DIR = "data"
 
-def main():
+def make_arg_parser():
     import argparse
     parser = argparse.ArgumentParser(description="time series utility")
     subparsers = parser.add_subparsers(dest="command", title="commands")
@@ -83,6 +83,10 @@ def main():
     parser_view.add_argument("file", help="file to view")
     parser_view.set_defaults(func=cmd_view)
 
+    return parser
+
+def main():
+    parser = make_arg_parser()
     args = parser.parse_args()
 
     if args.command:
