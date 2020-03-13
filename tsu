@@ -7,7 +7,8 @@ import csv
 from datetime import datetime
 
 class Config:
-    data_dir = "data"
+    data_dir            = "data"
+    export_csv_filename = "export.csv"
 
 # Define and catch our own exception to avoid intercepting language and library exceptions.
 class ValidationError(Exception):
@@ -71,18 +72,66 @@ def cmd_validate(args):
                 if fname.endswith(".csv"):
                     validate(os.path.join(curdir, fname))
 
+def strip_prefix(s, p):
+    if s.startswith(p):
+        return s[len(p):]
+    else:
+        return s
+
+def export_append_rows(rows, fpath):
+    if not fpath.endswith(".csv"):
+        return
+    dirname, fname = os.path.split(fpath)
+    # metric name is the file name without extension
+    metric = os.path.splitext(fname)[0]
+    # strip the data directory prefix path component
+    plat_acc = strip_prefix(dirname, Config.data_dir + os.sep)
+    # platform is the first path component, account is the rest
+    platform, account = plat_acc.split(os.sep, maxsplit=1)
+    with open(fpath, newline='') as csvfile:
+        reader = csv.reader(csvfile)
+        for row in reader:
+            ts, val = row
+            rows.append((ts, platform, account, metric, val))
+
+def export_csv(path, outname):
+    rows = []
+    if os.path.isfile(path):
+        export_append_rows(rows, path)
+    for curdir, dirs, files in os.walk(path):
+        for fname in files:
+            export_append_rows(rows, os.path.join(curdir, fname))
+
+    # sort by timestamp, in-place
+    rows.sort(key = lambda entry: entry[0])
+
+    # overwrite existing file
+    with open(outname, "w", newline="") as outfile:
+        writer = csv.writer(outfile, lineterminator="\n")
+        writer.writerow(("timestamp", "platform", "account", "metric", "value"))
+        writer.writerows(rows)
+    print("file saved:", outname)
+
+def cmd_export_csv(args):
+    export_csv(args.path, args.output)
+
 def make_arg_parser():
     import argparse
     parser = argparse.ArgumentParser(description="time series utility")
     subparsers = parser.add_subparsers(dest="command", title="commands")
 
     parser_validate = subparsers.add_parser("validate", help="validate time series files")
-    parser_validate.add_argument("path", nargs='?', default=Config.data_dir, help="path to validate")
+    parser_validate.add_argument("path", nargs='?', default=Config.data_dir, help="path to search csv files")
     parser_validate.set_defaults(func=cmd_validate)
 
     parser_view = subparsers.add_parser("view", help="view time series file")
     parser_view.add_argument("file", help="file to view")
     parser_view.set_defaults(func=cmd_view)
+
+    parser_export = subparsers.add_parser("export", help="export data from arbitrary tree of csv files into a single file, overwriting it")
+    parser_export.add_argument("path", nargs='?', default=Config.data_dir, help="path to search csv files")
+    parser_export.add_argument("--output", default=Config.export_csv_filename, help="file name to save")
+    parser_export.set_defaults(func=cmd_export_csv)
 
     return parser
 
