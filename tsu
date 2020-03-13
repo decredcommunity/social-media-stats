@@ -7,8 +7,9 @@ import csv
 from datetime import datetime
 
 class Config:
-    data_dir            = "data"
-    export_csv_filename = "export.csv"
+    data_dir        = "data"
+    errors_filename = "errors.csv"
+    export_filename = "export.csv"
 
 # Define and catch our own exception to avoid intercepting language and library exceptions.
 class ValidationError(Exception):
@@ -38,7 +39,7 @@ def parse(entry, int_val=True):
             raise ValidationError("value is empty")
     return dt, val
 
-STRING_VALUE_FILES = frozenset(["errors.csv"])
+STRING_VALUE_FILES = frozenset([Config.errors_filename])
 
 def validate(path, view=False):
     with open(path, newline='') as csvfile:
@@ -100,6 +101,8 @@ def export_csv(path, outname):
         export_append_rows(rows, path)
     for curdir, dirs, files in os.walk(path):
         for fname in files:
+            if fname == Config.errors_filename:
+                continue
             export_append_rows(rows, os.path.join(curdir, fname))
 
     # sort by timestamp, in-place
@@ -128,9 +131,9 @@ def make_arg_parser():
     parser_view.add_argument("file", help="file to view")
     parser_view.set_defaults(func=cmd_view)
 
-    parser_export = subparsers.add_parser("export", help="export data from arbitrary tree of csv files into a single file, overwriting it")
+    parser_export = subparsers.add_parser("export", help="export data from arbitrary tree of csv files into a single file (" + Config.export_filename + " by default), overwriting it; " + Config.errors_filename + " files are ignored")
     parser_export.add_argument("path", nargs='?', default=Config.data_dir, help="path to search csv files")
-    parser_export.add_argument("--output", default=Config.export_csv_filename, help="file name to save")
+    parser_export.add_argument("--output", default=Config.export_filename, help="file name to save")
     parser_export.set_defaults(func=cmd_export_csv)
 
     return parser
