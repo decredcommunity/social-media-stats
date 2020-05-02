@@ -5,14 +5,19 @@
 import os
 import csv
 from datetime import datetime
+import time
 
 class Config:
-    data_dir        = "data"
-    errors_filename = "errors.csv"
-    export_filename = "export.csv"
+    data_dir            = "data"
+    errors_filename     = "errors.csv"
+    export_filename     = "export.csv"
+    profile_filename    = "profile.yml"
 
 # Define and catch our own exception to avoid intercepting language and library exceptions.
 class ValidationError(Exception):
+    pass
+
+class CommandError(Exception):
     pass
 
 def parse(entry, int_val=True):
@@ -40,6 +45,17 @@ def parse(entry, int_val=True):
     return dt, val
 
 STRING_VALUE_FILES = frozenset([Config.errors_filename])
+
+def csv_iter(filename):
+    """Generator yielding rows of the csv file."""
+    with open(filename, newline="") as f:
+        yield from csv.reader(f)
+
+def write_csv(filename, rows):
+    # overwrite existing file
+    with open(filename, "w", newline="") as f:
+        writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
+        writer.writerows(rows)
 
 def validate(path, view=False):
     with open(path, newline='') as csvfile:
@@ -118,6 +134,62 @@ def export_csv(path, outname):
 def cmd_export_csv(args):
     export_csv(args.path, args.output)
 
+def get_profile_url(path):
+    # this small ad-hoc YAML value extractor allows to avoid adding YAML library dependency
+    # todo: migrate to JSON and get rid of this
+    with open(path) as f:
+        for line in f:
+            if line.startswith("url: "):
+                return line.rstrip('\n').replace("url: ", "", 1)
+
+def make_hint(dirpath, default_hint):
+    profile_path = os.path.join(dirpath, Config.profile_filename)
+    if os.path.exists(profile_path):
+        return get_profile_url(profile_path)
+    else:
+        return default_hint
+
+def entry_file(path):
+    if not path.endswith(".csv"):
+        raise CommandError("expected a csv file but got: " + path)
+    dname, fname = os.path.split(path)
+    int_values = fname not in STRING_VALUE_FILES
+    rows = list(csv_iter(path)) # read all to get the length
+    had_values = len(rows) > 0
+    if had_values:
+        last_dt, last_val = parse(rows[-1], int_values)
+        # extra output for a sanity check
+        print("Last record in '{}' is (time {}, value {})".format(fname, last_dt, last_val))
+    hint = make_hint(dname, fname)
+    print("Now capture the value for '{}' via {}".format(fname, hint))
+    if int_values:
+        while True: # entry loop
+            s = input("Enter integer value: ")
+            try:
+                val = int(s)
+                break # entry loop
+            except ValueError as e:
+                print("expected an integer but got: " + s)
+    else:
+        s = input("Enter string value: ")
+        val = s
+
+    now = int(time.time())
+    rows.append((now, val))
+    write_csv(path, rows)
+    delta = " ({:+})".format(val - last_val) if had_values else ""
+    print("Appended (time {}, value {}{}) to file '{}'".format(datetime.utcfromtimestamp(now), val, delta, fname))
+
+def cmd_entry(args):
+    print("Interactive data entry mode. Make sure your system clock is accurate.")
+    print("Your system UTC time is:", format(datetime.utcfromtimestamp(int(time.time()))))
+    path = args.path
+    if os.path.isfile(path):
+        entry_file(path)
+    elif os.path.isdir(path):
+        # todo: walk, if directory contains csv files, generate hint from profile.yml if it exists
+        raise CommandError("command not implemented yet")
+
 def make_arg_parser():
     import argparse
     parser = argparse.ArgumentParser(description="time series utility")
@@ -136,6 +208,10 @@ def make_arg_parser():
     parser_export.add_argument("--output", default=Config.export_filename, help="file name to save")
     parser_export.set_defaults(func=cmd_export_csv)
 
+    parser_entry = subparsers.add_parser("entry", help="enter data manually")
+    parser_entry.add_argument("path", nargs='?', default=Config.data_dir, help="file or directory path to enter data in; if directory, the program will prompt data entry for each CSV file found in it")
+    parser_entry.set_defaults(func=cmd_entry)
+
     return parser
 
 def main():
@@ -145,6 +221,10 @@ def main():
     if args.command:
         try:
             args.func(args)
+        except CommandError as e:
+            print("error:", e)
+        except KeyboardInterrupt:
+            print("\naborting")
         except BrokenPipeError:
             # silence error when e.g. piping into `less` and quitting before reading all
             pass
