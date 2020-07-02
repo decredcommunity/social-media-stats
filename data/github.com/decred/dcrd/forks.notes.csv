@@ -1,0 +1,1 @@
+1588377732,"dcrd GH repo was changed to no longer be a fork of btcd. Before this data point, the fork count was the sum of all forks of btcd and its forks. From now on, the count is dcrd forks only. See DJ202004 for the rationale"
