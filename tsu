@@ -165,26 +165,26 @@ def entry_file(path):
     if had_values:
         last_dt, last_val = parse(rows[-1], int_values)
         # extra output for a sanity check
-        print("Last record in '{}' is (time {}, value {})".format(fname, last_dt, last_val))
+        print("{}: last record is (time {}, value {})".format(fname, last_dt, last_val))
     hint = make_hint(dname, fname)
-    print("Now capture the value for '{}' via {}".format(fname, hint))
+    print("{}: now capture the value from {}".format(fname, hint))
     if int_values:
         while True: # entry loop
-            s = input("Enter integer value: ")
+            s = input("{}: enter integer value: ".format(fname))
             try:
                 val = int(s)
                 break # entry loop
             except ValueError as e:
-                print("expected an integer but got: " + s)
+                print("{}: expected an integer but got: {}".format(fname, s))
     else:
-        s = input("Enter string value: ")
+        s = input("{}: enter string value: ".format(fname))
         val = s
 
     now = int(time.time())
     rows.append((now, val))
     write_csv(path, rows)
     delta = " ({:+})".format(val - last_val) if had_values else ""
-    print("Appended (time {}, value {}{}) to file '{}'".format(datetime.utcfromtimestamp(now), val, delta, fname))
+    print("{}: appended (time {}, value {}{})".format(fname, datetime.utcfromtimestamp(now), val, delta))
 
 def cmd_entry(args):
     print("Interactive data entry mode. Make sure your system clock is accurate.")
