@@ -14,15 +14,13 @@ class Config:
     profile_filename    = "profile.yml"
 
 # Define and catch our own exception to avoid intercepting language and library exceptions.
-class ValidationError(Exception):
-    pass
-
-# Runtime errors.
 class TsuError(Exception):
     pass
 
-# Usage error.
-class CommandError(Exception):
+class ValidationError(TsuError):
+    pass
+
+class CommandError(TsuError):
     pass
 
 def parse(entry, int_val=True):
@@ -255,7 +253,7 @@ def main():
     if args.command:
         try:
             args.func(args)
-        except (CommandError, TsuError) as e:
+        except TsuError as e:
             print("error:", e)
         except KeyboardInterrupt:
             print("\naborting")
