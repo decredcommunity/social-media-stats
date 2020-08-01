@@ -82,6 +82,7 @@ def validate(path, view=False):
                 print("err {}:{}: {}".format(path, r.line_num, e))
 
 def cmd_view(args):
+    # todo: handle dir error
     validate(args.file, True)
 
 def cmd_validate(args):
@@ -224,11 +225,11 @@ def make_arg_parser():
     parser = argparse.ArgumentParser(description="time series utility")
     subparsers = parser.add_subparsers(dest="command", title="commands")
 
-    parser_validate = subparsers.add_parser("validate", help="validate time series files")
+    parser_validate = subparsers.add_parser("validate", aliases=["val"], help="validate time series files")
     parser_validate.add_argument("path", nargs='?', default=Config.data_dir, help="path to search csv files")
     parser_validate.set_defaults(func=cmd_validate)
 
-    parser_view = subparsers.add_parser("view", help="view time series file")
+    parser_view = subparsers.add_parser("view", aliases=["v"], help="view time series file")
     parser_view.add_argument("file", help="file to view")
     parser_view.set_defaults(func=cmd_view)
 
@@ -237,7 +238,7 @@ def make_arg_parser():
     parser_export.add_argument("--output", default=Config.export_filename, help="file name to save")
     parser_export.set_defaults(func=cmd_export_csv)
 
-    parser_entry = subparsers.add_parser("entry", help="enter data manually")
+    parser_entry = subparsers.add_parser("entry", aliases=["e"], help="enter data manually")
     parser_entry.add_argument("path", nargs='?', default=Config.data_dir, help="file or directory path to enter data in; if directory, the program will prompt data entry for each CSV file found in it")
     parser_entry.set_defaults(func=cmd_entry)
 
