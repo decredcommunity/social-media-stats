@@ -155,6 +155,19 @@ def make_hint(dirpath, default_hint):
     else:
         return default_hint
 
+def optional_input(prompt):
+    """Read a string from standard input, cancelling on double blank entry.
+
+    Wrap standard input() and return (True, string) on success or (False, None)
+    if user cancels.
+    """
+    s = input(prompt)
+    if s == "":
+        s = input("enter blank again to skip or a value to continue: ")
+        if s == "":
+            return (False, None)
+    return (True, s)
+
 def entry_file(path):
     if not path.endswith(".csv"):
         raise TsuError("expected a csv file but got: " + path)
@@ -169,15 +182,21 @@ def entry_file(path):
     hint = make_hint(dname, fname)
     print("{}: now capture the value from {}".format(fname, hint))
     if int_values:
-        while True: # entry loop
-            s = input("{}: enter integer value: ".format(fname))
+        while True: # entry loop for int value
+            ok, s = optional_input("{}: enter integer value: ".format(fname))
+            if not ok:
+                print("{}: skipping".format(fname))
+                return
             try:
                 val = int(s)
                 break # entry loop
             except ValueError as e:
                 print("{}: expected an integer but got: {}".format(fname, s))
     else:
-        s = input("{}: enter string value: ".format(fname))
+        ok, s = optional_input("{}: enter string value: ".format(fname))
+        if not ok:
+            print("{}: skipping".format(fname))
+            return
         val = s
 
     now = int(time.time())
