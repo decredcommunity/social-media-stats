@@ -17,6 +17,11 @@ class Config:
 class ValidationError(Exception):
     pass
 
+# Runtime errors.
+class TsuError(Exception):
+    pass
+
+# Usage error.
 class CommandError(Exception):
     pass
 
@@ -82,6 +87,7 @@ def cmd_view(args):
 def cmd_validate(args):
     path = args.path
     if os.path.isfile(path):
+        # todo: raise ex if not path.endswith(".csv")
         validate(path)
     elif os.path.isdir(path):
         for curdir, dirs, files in os.walk(path):
@@ -151,7 +157,7 @@ def make_hint(dirpath, default_hint):
 
 def entry_file(path):
     if not path.endswith(".csv"):
-        raise CommandError("expected a csv file but got: " + path)
+        raise TsuError("expected a csv file but got: " + path)
     dname, fname = os.path.split(path)
     int_values = fname not in STRING_VALUE_FILES
     rows = list(csv_iter(path)) # read all to get the length
@@ -185,10 +191,14 @@ def cmd_entry(args):
     print("Your system UTC time is:", format(datetime.utcfromtimestamp(int(time.time()))))
     path = args.path
     if os.path.isfile(path):
+        if not path.endswith(".csv"):
+            raise CommandError("expected a csv file but got: " + path)
         entry_file(path)
     elif os.path.isdir(path):
-        # todo: walk, if directory contains csv files, generate hint from profile.yml if it exists
-        raise CommandError("command not implemented yet")
+        for curdir, dirs, files in os.walk(path):
+            for fname in files:
+                if fname.endswith(".csv"):
+                    entry_file(os.path.join(curdir, fname))
 
 def make_arg_parser():
     import argparse
