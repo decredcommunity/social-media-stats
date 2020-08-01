@@ -82,7 +82,11 @@ def validate(path, view=False):
                 print("err {}:{}: {}".format(path, r.line_num, e))
 
 def cmd_view(args):
-    # todo: handle dir error
+    path = args.file
+    if not os.path.isfile(path):
+        raise CommandError("expected a file but got a directory: " + path)
+    if not path.endswith(".csv"):
+        raise CommandError("expected a csv file but got: " + path)
     validate(args.file, True)
 
 def cmd_validate(args):
