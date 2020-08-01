@@ -181,7 +181,7 @@ def entry_file(path):
     if had_values:
         last_dt, last_val = parse(rows[-1], int_values)
         # extra output for a sanity check
-        print("{}: last record is (time {}, value {})".format(fname, last_dt, last_val))
+        print("{}: last record is: time {}, value {}".format(fname, last_dt, last_val))
     hint = make_hint(dname, fname)
     print("{}: now capture the value from {}".format(fname, hint))
     if int_values:
@@ -206,7 +206,7 @@ def entry_file(path):
     rows.append((now, val))
     write_csv(path, rows)
     delta = " ({:+})".format(val - last_val) if had_values else ""
-    print("{}: appended (time {}, value {}{})".format(fname, datetime.utcfromtimestamp(now), val, delta))
+    print("{}: appended: time {}, value {}{}".format(fname, datetime.utcfromtimestamp(now), val, delta))
 
 def cmd_entry(args):
     print("Interactive data entry mode. Make sure your system clock is accurate.")
