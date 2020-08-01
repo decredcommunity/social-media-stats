@@ -184,6 +184,7 @@ def entry_file(path):
         print("{}: last record is: time {}, value {}".format(fname, last_dt, last_val))
     hint = make_hint(dname, fname)
     print("{}: now capture the value from {}".format(fname, hint))
+    delta = ""
     if int_values:
         while True: # entry loop for int value
             ok, s = optional_input("{}: enter integer value: ".format(fname))
@@ -195,6 +196,7 @@ def entry_file(path):
                 break # entry loop
             except ValueError as e:
                 print("{}: expected an integer but got: {}".format(fname, s))
+        delta = " ({:+})".format(val - last_val) if had_values else ""
     else:
         ok, s = optional_input("{}: enter string value: ".format(fname))
         if not ok:
@@ -205,7 +207,6 @@ def entry_file(path):
     now = int(time.time())
     rows.append((now, val))
     write_csv(path, rows)
-    delta = " ({:+})".format(val - last_val) if had_values else ""
     print("{}: appended: time {}, value {}{}".format(fname, datetime.utcfromtimestamp(now), val, delta))
 
 def cmd_entry(args):
