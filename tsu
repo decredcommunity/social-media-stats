@@ -164,12 +164,16 @@ def optional_input(prompt):
     Wrap standard input() and return (True, string) on success or (False, None)
     if user cancels.
     """
-    s = input(prompt)
-    if s == "":
-        s = input("enter blank again to skip or a value to continue: ")
+    try:
+        s = input(prompt)
         if s == "":
-            return (False, None)
-    return (True, s)
+            s = input("enter blank again to skip or a value to continue: ")
+            if s == "":
+                return (False, None)
+        return (True, s)
+    except EOFError:
+        print("(got EOF)")
+        return (False, None)
 
 def confirmed_input(prompt, confirm_prompt):
     """Read inputs until two subsequent inputs match, canceling on blank input.
