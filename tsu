@@ -233,6 +233,20 @@ def entry_file(path):
     print("{}: appended: time {}, value {}{}".format(fname, datetime.utcfromtimestamp(now), val, delta))
 
 def cmd_entry(args):
+    """Enter data manually in an interactive session.
+
+    You will be prompted to enter data points one by one for each applicable
+    file. After collecting the input value, UTC timestamp will be generated
+    and appended to the end of file together with the new value. Make sure your
+    system clock is accurate.
+
+    To protect from errors, you will be prompted to enter each value twice.
+
+    To skip entering current value, enter a blank line twice or hit Ctrl-D
+    (Ctl-Z+Return on Windows).
+
+    To quit the data entry session, hit Ctrl-C.
+    """
     print("Interactive data entry mode. Make sure your system clock is accurate.")
     print("Your system UTC time is:", format(datetime.utcfromtimestamp(int(time.time()))))
     path = args.path
@@ -264,7 +278,8 @@ def make_arg_parser():
     parser_export.add_argument("--output", default=Config.export_filename, help="file name to save")
     parser_export.set_defaults(func=cmd_export_csv)
 
-    parser_entry = subparsers.add_parser("entry", aliases=["e"], help="enter data manually")
+    parser_entry = subparsers.add_parser("entry", aliases=["e"], help="enter data manually",
+        description=cmd_entry.__doc__)
     parser_entry.add_argument("path", nargs='?', default=Config.data_dir, help="file or directory path to enter data in; if directory, the program will prompt data entry for each CSV file found in it")
     parser_entry.set_defaults(func=cmd_entry)
 
