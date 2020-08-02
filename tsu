@@ -171,22 +171,19 @@ def optional_input(prompt):
             return (False, None)
     return (True, s)
 
-def confirmed_input(prompt):
+def confirmed_input(prompt, confirm_prompt):
     """Read inputs until two subsequent inputs match, canceling on blank input.
 
     If user cancels input, return what optional_input returned.
     """
-    # todo: prompt "confirm" on second entry
-    # todo: it must be clear from the prompt how this loop behaves
     # set up the loop
-    # initial and confirmation input prompts might differ
     ok, prev = optional_input(prompt)
     if not ok:
         return (ok, prev)
 
     # keep collecting inputs until (a) two inputs match or (b) input is canceled
     while True:
-        ok, cur = optional_input(prompt)
+        ok, cur = optional_input(confirm_prompt)
         if (not ok) or (cur == prev):
             return (ok, cur)
         prev = cur
@@ -207,7 +204,8 @@ def entry_file(path):
     delta = ""
     if int_values:
         while True: # entry loop for int value
-            ok, s = confirmed_input("{}: enter integer value: ".format(fname))
+            ok, s = confirmed_input("{}: enter integer value: ".format(fname),
+                                    "{}: confirm integer value: ".format(fname))
             if not ok:
                 print("{}: skipping".format(fname))
                 return
@@ -218,7 +216,8 @@ def entry_file(path):
                 print("{}: expected an integer but got: {}".format(fname, s))
         delta = " ({:+})".format(val - last_val) if had_values else ""
     else:
-        ok, s = confirmed_input("{}: enter string value: ".format(fname))
+        ok, s = confirmed_input("{}: enter string value: ".format(fname),
+                                "{}: confirm string value: ".format(fname))
         if not ok:
             print("{}: skipping".format(fname))
             return
