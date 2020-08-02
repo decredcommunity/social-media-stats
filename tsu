@@ -159,7 +159,7 @@ def make_hint(dirpath, default_hint):
         return default_hint
 
 def optional_input(prompt):
-    """Read a string from standard input, cancelling on double blank entry.
+    """Read a string from standard input, canceling on double blank entry.
 
     Wrap standard input() and return (True, string) on success or (False, None)
     if user cancels.
@@ -170,6 +170,26 @@ def optional_input(prompt):
         if s == "":
             return (False, None)
     return (True, s)
+
+def confirmed_input(prompt):
+    """Read inputs until two subsequent inputs match, canceling on blank input.
+
+    If user cancels input, return what optional_input returned.
+    """
+    # todo: prompt "confirm" on second entry
+    # todo: it must be clear from the prompt how this loop behaves
+    # set up the loop
+    # initial and confirmation input prompts might differ
+    ok, prev = optional_input(prompt)
+    if not ok:
+        return (ok, prev)
+
+    # keep collecting inputs until (a) two inputs match or (b) input is canceled
+    while True:
+        ok, cur = optional_input(prompt)
+        if (not ok) or (cur == prev):
+            return (ok, cur)
+        prev = cur
 
 def entry_file(path):
     if not path.endswith(".csv"):
@@ -187,7 +207,7 @@ def entry_file(path):
     delta = ""
     if int_values:
         while True: # entry loop for int value
-            ok, s = optional_input("{}: enter integer value: ".format(fname))
+            ok, s = confirmed_input("{}: enter integer value: ".format(fname))
             if not ok:
                 print("{}: skipping".format(fname))
                 return
@@ -198,7 +218,7 @@ def entry_file(path):
                 print("{}: expected an integer but got: {}".format(fname, s))
         delta = " ({:+})".format(val - last_val) if had_values else ""
     else:
-        ok, s = optional_input("{}: enter string value: ".format(fname))
+        ok, s = confirmed_input("{}: enter string value: ".format(fname))
         if not ok:
             print("{}: skipping".format(fname))
             return
