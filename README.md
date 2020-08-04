@@ -1,5 +1,9 @@
 # Decred Social Media Data
 
+For visual graphs of the data see: https://github.com/xaur/social-media-data/blob/graphs/graphs/index.md
+
+The images are stored in a separate Git branch called `graphs` to avoid having large binary files in `master`.
+
 `data` directory contains time series data of Decred social media stored in CSV format:
 
 - Each CSV file contains only a single metric. This is simple, flexible and composable.
