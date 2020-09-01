@@ -208,6 +208,10 @@ def entry_file(path):
     if not path.endswith(".csv"):
         raise TsuError("expected a csv file but got: " + path)
     dname, fname = os.path.split(path)
+
+    hint = make_hint(dname, fname)
+    print("{}: now capture the value from {}".format(fname, hint))
+
     int_values = fname not in STRING_VALUE_FILES
     rows = list(csv_iter(path)) # read all to get the length
     had_values = len(rows) > 0
@@ -215,8 +219,7 @@ def entry_file(path):
         last_dt, last_val = parse(rows[-1], int_values)
         # extra output for a sanity check
         print("{}: last record is: time {}, value {}".format(fname, last_dt, last_val))
-    hint = make_hint(dname, fname)
-    print("{}: now capture the value from {}".format(fname, hint))
+
     delta = ""
     if int_values:
         while True: # entry loop for int value
