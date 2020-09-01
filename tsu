@@ -204,13 +204,23 @@ def confirmed_input(prompt, confirm_prompt):
             return (ok, cur)
         prev = cur
 
+def make_prompt_prefix(path):
+    # treat file's parent dir as "account" and filename w/o ext as "metric"
+    dpath, fname = os.path.split(path)
+    adpath = os.path.abspath(dpath)
+    acc = os.path.basename(adpath)
+    metric = os.path.splitext(fname)[0]
+    return acc + "/" + metric
+
 def entry_file(path):
     if not path.endswith(".csv"):
         raise TsuError("expected a csv file but got: " + path)
     dname, fname = os.path.split(path)
 
+    prompt_prefix = make_prompt_prefix(path)
+
     hint = make_hint(dname, fname)
-    print("{}: now capture the value from {}".format(fname, hint))
+    print("{}: capture the value from {}".format(prompt_prefix, hint))
 
     int_values = fname not in STRING_VALUE_FILES
     rows = list(csv_iter(path)) # read all to get the length
@@ -218,34 +228,34 @@ def entry_file(path):
     if had_values:
         last_dt, last_val = parse(rows[-1], int_values)
         # extra output for a sanity check
-        print("{}: last record is: time {}, value {}".format(fname, last_dt, last_val))
+        print("{}: last record is: time {}, value {}".format(prompt_prefix, last_dt, last_val))
 
     delta = ""
     if int_values:
         while True: # entry loop for int value
-            ok, s = confirmed_input("{}: enter integer value: ".format(fname),
-                                    "{}: confirm integer value: ".format(fname))
+            ok, s = confirmed_input("{}: enter integer value: ".format(prompt_prefix),
+                                    "{}: confirm integer value: ".format(prompt_prefix))
             if not ok:
-                print("{}: skipping".format(fname))
+                print("{}: skipping".format(prompt_prefix))
                 return
             try:
                 val = int(s)
                 break # entry loop
             except ValueError as e:
-                print("{}: expected an integer but got: {}".format(fname, s))
+                print("{}: expected an integer but got: {}".format(prompt_prefix, s))
         delta = " ({:+})".format(val - last_val) if had_values else ""
     else:
-        ok, s = confirmed_input("{}: enter string value: ".format(fname),
-                                "{}: confirm string value: ".format(fname))
+        ok, s = confirmed_input("{}: enter string value: ".format(prompt_prefix),
+                                "{}: confirm string value: ".format(prompt_prefix))
         if not ok:
-            print("{}: skipping".format(fname))
+            print("{}: skipping".format(prompt_prefix))
             return
         val = s
 
     now = int(time.time())
     rows.append((now, val))
     write_csv(path, rows)
-    print("{}: appended: time {}, value {}{}".format(fname, datetime.utcfromtimestamp(now), val, delta))
+    print("{}: saved: time {}, value {}{}".format(prompt_prefix, datetime.utcfromtimestamp(now), val, delta))
 
 def cmd_entry(args):
     """Enter data manually in an interactive session.
