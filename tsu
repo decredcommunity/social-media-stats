@@ -5,6 +5,7 @@
 import os
 import csv
 from datetime import datetime
+from urllib.parse import urlparse, urlunparse
 import time
 
 class Config:
@@ -151,10 +152,21 @@ def get_profile_url(path):
             if line.startswith("url: "):
                 return line.rstrip('\n').replace("url: ", "", 1)
 
+def replace_url(url):
+    # replace some URLs for easier data point collection
+    pu = urlparse(url)
+    if pu.netloc == "twitter.com":
+        newpu = pu._replace(netloc = "nitter.net")
+        newurl = urlunparse(newpu)
+        return newurl
+    return url
+
 def make_hint(dirpath, default_hint):
     profile_path = os.path.join(dirpath, Config.profile_filename)
     if os.path.exists(profile_path):
-        return get_profile_url(profile_path)
+        profile_url = get_profile_url(profile_path)
+        hint = replace_url(profile_url)
+        return hint
     else:
         return default_hint
 
