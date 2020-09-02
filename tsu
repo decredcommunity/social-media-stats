@@ -159,11 +159,11 @@ def replace_url(url):
     return url
 
 def make_hint(dirpath, default_hint):
-    profile_path = os.path.join(dirpath, Config.profile_filename)
-    if os.path.exists(profile_path):
-        pdata = load_json(profile_path)
-        profile_url = pdata["url"]
-        hint = replace_url(profile_url)
+    ppath = os.path.join(dirpath, Config.profile_filename)
+    if os.path.exists(ppath):
+        pdata = load_json(ppath)
+        purl = pdata["url"]
+        hint = replace_url(purl)
         return hint
     else:
         return default_hint
