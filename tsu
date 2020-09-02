@@ -4,6 +4,7 @@
 
 import os
 import csv
+import json
 from datetime import datetime
 from urllib.parse import urlparse, urlunparse
 import time
@@ -12,7 +13,7 @@ class Config:
     data_dir            = "data"
     errors_filename     = "errors.csv"
     export_filename     = "export.csv"
-    profile_filename    = "profile.yml"
+    profile_filename    = "profile.json"
 
 # Define and catch our own exception to avoid intercepting language and library exceptions.
 class TsuError(Exception):
@@ -144,13 +145,9 @@ def export_csv(path, outname):
 def cmd_export_csv(args):
     export_csv(args.path, args.output)
 
-def get_profile_url(path):
-    # this small ad-hoc YAML value extractor allows to avoid adding YAML library dependency
-    # todo: migrate to JSON and get rid of this
+def load_json(path):
     with open(path) as f:
-        for line in f:
-            if line.startswith("url: "):
-                return line.rstrip('\n').replace("url: ", "", 1)
+        return json.load(f)
 
 def replace_url(url):
     # replace some URLs for easier data point collection
@@ -164,7 +161,8 @@ def replace_url(url):
 def make_hint(dirpath, default_hint):
     profile_path = os.path.join(dirpath, Config.profile_filename)
     if os.path.exists(profile_path):
-        profile_url = get_profile_url(profile_path)
+        pdata = load_json(profile_path)
+        profile_url = pdata["url"]
         hint = replace_url(profile_url)
         return hint
     else:
