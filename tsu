@@ -69,24 +69,24 @@ def write_csv(filename, rows):
         writer.writerows(rows)
 
 def validate(path, view=False):
-    with open(path, newline="") as csvfile:
-        r = csv.reader(csvfile)
-        int_values = os.path.basename(path) not in STRING_VALUE_FILES
-        prev_dt = datetime.min
-        for row in r:
-            try:
-                dt, val = parse(row, int_values)
-                if dt <= prev_dt:
-                    es = "timestamp '{}' must be greater than '{}'".format(dt, prev_dt)
-                    raise ValidationError(es)
-                prev_dt = dt
-                if view:
-                    if int_values:
-                        print(dt, "{:>6,}".format(val))
-                    else:
-                        print(dt, val)
-            except ValidationError as e:
-                print("err {}:{}: {}".format(path, r.line_num, e))
+    int_values = os.path.basename(path) not in STRING_VALUE_FILES
+    prev_dt = datetime.min
+
+    # start counting from 1 to match file line number
+    for line_num, row in enumerate(csv_iter(path), start=1):
+        try:
+            dt, val = parse(row, int_values)
+            if dt <= prev_dt:
+                es = "timestamp '{}' must be greater than '{}'".format(dt, prev_dt)
+                raise ValidationError(es)
+            prev_dt = dt
+            if view:
+                if int_values:
+                    print(dt, "{:>6,}".format(val))
+                else:
+                    print(dt, val)
+        except ValidationError as e:
+            print("err {}:{}: {}".format(path, line_num, e))
 
 def cmd_view(args):
     path = args.file
