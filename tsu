@@ -133,7 +133,7 @@ def export_csv(path, outname):
             export_append_rows(rows, os.path.join(curdir, fname))
 
     # sort by timestamp, in-place
-    rows.sort(key = lambda entry: entry[0])
+    rows.sort(key=lambda entry: entry[0])
 
     # overwrite existing file
     with open(outname, "w", newline="") as outfile:
@@ -153,7 +153,7 @@ def replace_url(url):
     # replace some URLs for easier data point collection
     pu = urlparse(url)
     if pu.netloc == "twitter.com":
-        newpu = pu._replace(netloc = "nitter.net")
+        newpu = pu._replace(netloc="nitter.net")
         newurl = urlunparse(newpu)
         return newurl
     return url
