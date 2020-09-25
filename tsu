@@ -63,7 +63,7 @@ def write_csv(filename, rows):
         writer.writerows(rows)
 
 def validate(path, view=False):
-    with open(path, newline='') as csvfile:
+    with open(path, newline="") as csvfile:
         r = csv.reader(csvfile)
         int_values = os.path.basename(path) not in STRING_VALUE_FILES
         prev_dt = datetime.min
@@ -116,7 +116,7 @@ def export_append_rows(rows, fpath):
     plat_acc = strip_prefix(dirname, Config.data_dir + os.sep)
     # platform is the first path component, account is the rest
     platform, account = plat_acc.split(os.sep, maxsplit=1)
-    with open(fpath, newline='') as csvfile:
+    with open(fpath, newline="") as csvfile:
         reader = csv.reader(csvfile)
         for row in reader:
             ts, val = row
@@ -297,7 +297,7 @@ def make_arg_parser():
         "validate", aliases=["val"],
         help="validate time series files")
     validate.add_argument(
-        "path", nargs='?',
+        "path", nargs="?",
         default=Config.data_dir,
         help="path to search csv files")
     validate.set_defaults(func=cmd_validate)
@@ -317,7 +317,7 @@ def make_arg_parser():
                      " single file (" + Config.export_filename + " by default)," +
                      " overwriting it. " + Config.errors_filename + " files are ignored."))
     export.add_argument(
-        "path", nargs='?',
+        "path", nargs="?",
         default=Config.data_dir,
         help="path to search csv files")
     export.add_argument(
@@ -331,7 +331,7 @@ def make_arg_parser():
         help="enter data manually",
         description=cmd_entry.__doc__)
     entry.add_argument(
-        "path", nargs='?',
+        "path", nargs="?",
         default=Config.data_dir,
         help="file or directory path to enter data in; if directory, the"
              " program will prompt data entry for each CSV file found in it")
