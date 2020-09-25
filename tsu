@@ -118,6 +118,13 @@ def strip_prefix(s, p):
     else:
         return s
 
+def load_profile(dirpath):
+    ppath = os.path.join(dirpath, Config.profile_filename)
+    if os.path.exists(ppath):
+        return load_json(ppath)
+    else:
+        return None
+
 def export_append_rows(rows, fpath, graph):
     if not fpath.endswith(".csv"):
         return
@@ -186,16 +193,15 @@ def replace_url(url):
     return url
 
 def make_hint(dirpath, default_hint):
-    ppath = os.path.join(dirpath, Config.profile_filename)
+    profile = load_profile(dirpath)
     hint = ""
-    if os.path.exists(ppath):
-        pdata = load_json(ppath)
-        if "name" in pdata:
-            hint += '"' + pdata["name"] + '"'
-        if "url" in pdata:
+    if profile:
+        if "name" in profile:
+            hint += '"' + profile["name"] + '"'
+        if "url" in profile:
             if hint:
                 hint += " "
-            hint += replace_url(pdata["url"])
+            hint += replace_url(profile["url"])
 
     return hint if hint else default_hint
 
