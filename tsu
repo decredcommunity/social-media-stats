@@ -155,7 +155,7 @@ def export_csv(path, outname):
                     export_append_rows(rows, fpath)
 
     # sort by timestamp, in-place
-    rows.sort(key=lambda entry: entry[0])
+    rows.sort()
     print("found {} data points".format(len(rows)))
 
     # overwrite existing file
