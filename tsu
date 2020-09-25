@@ -15,6 +15,7 @@ class Config:
     errors_filename     = "errors.csv"
     export_filename     = "export.csv"
     profile_filename    = "profile.json"
+    graph_list_file     = "graph.list"
 
 # Define and catch our own exception to avoid intercepting language and library
 # exceptions.
@@ -117,53 +118,59 @@ def strip_prefix(s, p):
     else:
         return s
 
-def export_append_rows(rows, fpath):
+def export_append_rows(rows, fpath, graph):
     if not fpath.endswith(".csv"):
         return
     dirname, fname = os.path.split(fpath)
     # metric name is the file name without extension
     metric = os.path.splitext(fname)[0]
-    # strip the data directory prefix path component
+    # strip the `data` directory prefix path component
     plat_acc = strip_prefix(dirname, Config.data_dir + os.sep)
     # platform is the first path component, account is the rest
     platform, account = plat_acc.split(os.sep, maxsplit=1)
+    graph_int = int(graph)
     for ts, val in csv_iter(fpath):
-        rows.append((ts, platform, account, metric, val))
+        rows.append((ts, platform, account, metric, val, graph_int))
 
-def export_csv(path, outname):
+def export_csv(path, outname, graph_only):
     rows = []
     if os.path.isfile(path):
         # bypass all filters if file is specified directly (not via directory)
         export_append_rows(rows, path)
     else:
-        list_file = "graph.list"
-        if os.path.isfile(list_file):
-            graph_paths = load_list(list_file)
-            print("exporting {} paths listed in {}".format(
-                len(graph_paths), list_file))
+        graph_paths = []
+        if os.path.isfile(Config.graph_list_file):
+            graph_paths = load_list(Config.graph_list_file)
+            print("loaded {} paths from {}".format(
+                len(graph_paths), Config.graph_list_file))
+        if graph_only:
+            export_paths = graph_paths
+            print("exporting {} paths".format(len(export_paths)))
         else:
-            graph_paths = [path]
-            print("exporting path:", path)
-        for gp in graph_paths:
-            for curdir, dirs, files in os.walk(gp):
+            print("exporting paths:", path)
+            export_paths = [path]
+        for ep in export_paths:
+            for curdir, dirs, files in os.walk(ep):
                 for fname in files:
                     if fname == Config.errors_filename:
                         continue
                     fpath = os.path.join(curdir, fname)
-                    export_append_rows(rows, fpath)
+                    # set `graph` column to True if the file is whitelisted
+                    graph = any(map(fpath.startswith, graph_paths))
+                    export_append_rows(rows, fpath, graph)
 
     # sort by timestamp, in-place
     rows.sort()
     print("found {} data points".format(len(rows)))
 
-    header = ("timestamp", "platform", "account", "metric", "value")
+    header = ("timestamp", "platform", "account", "metric", "value", "graph")
 
     # overwrite existing file
     write_csv(outname, chain([header], rows))
     print("file saved:", outname)
 
 def cmd_export_csv(args):
-    export_csv(args.path, args.output)
+    export_csv(args.path, args.output, args.graph_only)
 
 def load_json(path):
     with open(path) as f:
@@ -348,6 +355,10 @@ def make_arg_parser():
         "path", nargs="?",
         default=Config.data_dir,
         help="path to search csv files")
+    export.add_argument(
+        "-g", "--graph-only",
+        action="store_true",
+        help="export only paths listed in " + Config.graph_list_file)
     export.add_argument(
         "--output",
         default=Config.export_filename,
