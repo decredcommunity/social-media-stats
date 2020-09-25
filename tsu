@@ -106,6 +106,10 @@ def cmd_validate(args):
                 if fname.endswith(".csv"):
                     validate(os.path.join(curdir, fname))
 
+def load_list(path):
+    with open(path) as f:
+        return [line.rstrip("\n") for line in f]
+
 def strip_prefix(s, p):
     if s.startswith(p):
         return s[len(p):]
@@ -129,15 +133,26 @@ def export_append_rows(rows, fpath):
             rows.append((ts, platform, account, metric, val))
 
 def export_csv(path, outname):
-    print("exporting path:", path)
     rows = []
     if os.path.isfile(path):
+        # bypass all filters if file is specified directly (not via directory)
         export_append_rows(rows, path)
-    for curdir, dirs, files in os.walk(path):
-        for fname in files:
-            if fname == Config.errors_filename:
-                continue
-            export_append_rows(rows, os.path.join(curdir, fname))
+    else:
+        list_file = "graph.list"
+        if os.path.isfile(list_file):
+            graph_paths = load_list(list_file)
+            print("exporting {} paths listed in {}".format(
+                len(graph_paths), list_file))
+        else:
+            graph_paths = [path]
+            print("exporting path:", path)
+        for gp in graph_paths:
+            for curdir, dirs, files in os.walk(gp):
+                for fname in files:
+                    if fname == Config.errors_filename:
+                        continue
+                    fpath = os.path.join(curdir, fname)
+                    export_append_rows(rows, fpath)
 
     # sort by timestamp, in-place
     rows.sort(key=lambda entry: entry[0])
