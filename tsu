@@ -15,7 +15,8 @@ class Config:
     export_filename     = "export.csv"
     profile_filename    = "profile.json"
 
-# Define and catch our own exception to avoid intercepting language and library exceptions.
+# Define and catch our own exception to avoid intercepting language and library
+# exceptions.
 class TsuError(Exception):
     pass
 
@@ -27,21 +28,25 @@ class CommandError(TsuError):
 
 def parse(entry, int_val=True):
     if len(entry) != 2:
-        raise ValidationError("entry must have exactly 2 fields: " + str(entry))
+        es = "entry must have exactly 2 fields: " + str(entry)
+        raise ValidationError(es)
     s1, s2 = entry
     try:
         tsi = int(s1)
     except ValueError as e:
-        raise ValidationError("timestamp is not an integer: '{}'".format(s1)) from e
+        es = "timestamp is not an integer: '{}'".format(s1)
+        raise ValidationError() from e
     try:
         dt = datetime.utcfromtimestamp(tsi)
     except Exception as e:
-        raise ValidationError("cannot parse datetime from timestamp: '{}'".format(tsi)) from e
+        es = "cannot parse datetime from timestamp: '{}'".format(tsi)
+        raise ValidationError(es) from e
     if int_val:
         try:
             val = int(s2)
         except ValueError as e:
-            raise ValidationError("value is not an integer: '{}'".format(s2)) from e
+            es = "value is not an integer: '{}'".format(s2)
+            raise ValidationError(es) from e
     else:
         if len(s2) > 0:
             val = s2
@@ -71,7 +76,8 @@ def validate(path, view=False):
             try:
                 dt, val = parse(row, int_values)
                 if dt <= prev_dt:
-                    raise ValidationError("timestamp '{}' must be greater than '{}'".format(dt, prev_dt))
+                    es = "timestamp '{}' must be greater than '{}'".format(dt, prev_dt)
+                    raise ValidationError(es)
                 prev_dt = dt
                 if view:
                     if int_values:
@@ -173,10 +179,10 @@ def make_hint(dirpath, default_hint):
     return hint if hint else default_hint
 
 def optional_input(prompt):
-    """Read a string from standard input, canceling on double blank entry.
+    """Read a string from standard input, cancel on double blank entry.
 
-    Wrap standard input() and return (True, string) on success or (False, None)
-    if user cancels.
+    Wrap standard input() and return (True, string) on success or
+    (False, None) if user cancels.
     """
     try:
         s = input(prompt)
@@ -190,7 +196,7 @@ def optional_input(prompt):
         return (False, None)
 
 def confirmed_input(prompt, confirm_prompt):
-    """Read inputs until two subsequent inputs match, canceling on blank input.
+    """Read inputs until two subsequent inputs match, cancel on blank input.
 
     If user cancels input, return what optional_input returned.
     """
@@ -230,13 +236,15 @@ def entry_file(path):
     if had_values:
         last_dt, last_val = parse(rows[-1], int_values)
         # extra output for a sanity check
-        print("{}: last record is: time {}, value {}".format(prompt_prefix, last_dt, last_val))
+        print("{}: last record is: time {}, value {}".format(
+            prompt_prefix, last_dt, last_val))
 
     delta = ""
     if int_values:
         while True: # entry loop for int value
-            ok, s = confirmed_input("{}: enter integer value: ".format(prompt_prefix),
-                                    "{}: confirm integer value: ".format(prompt_prefix))
+            ok, s = confirmed_input(
+                "{}: enter integer value: ".format(prompt_prefix),
+                "{}: confirm integer value: ".format(prompt_prefix))
             if not ok:
                 print("{}: skipping".format(prompt_prefix))
                 return
@@ -245,10 +253,12 @@ def entry_file(path):
                 break # entry loop
             except ValueError as e:
                 print("{}: expected an integer but got: {}".format(prompt_prefix, s))
+
         delta = " ({:+})".format(val - last_val) if had_values else ""
     else:
-        ok, s = confirmed_input("{}: enter string value: ".format(prompt_prefix),
-                                "{}: confirm string value: ".format(prompt_prefix))
+        ok, s = confirmed_input(
+            "{}: enter string value: ".format(prompt_prefix),
+            "{}: confirm string value: ".format(prompt_prefix))
         if not ok:
             print("{}: skipping".format(prompt_prefix))
             return
@@ -257,25 +267,28 @@ def entry_file(path):
     now = int(time.time())
     rows.append((now, val))
     write_csv(path, rows)
-    print("{}: saved: time {}, value {}{}".format(prompt_prefix, datetime.utcfromtimestamp(now), val, delta))
+    print("{}: saved: time {}, value {}{}".format(
+        prompt_prefix, datetime.utcfromtimestamp(now), val, delta))
 
 def cmd_entry(args):
     """Enter data manually in an interactive session.
 
-    You will be prompted to enter data points one by one for each applicable
-    file. After collecting the input value, UTC timestamp will be generated
-    and appended to the end of file together with the new value. Make sure your
-    system clock is accurate.
+    You will be prompted to enter data points one by one for each
+    applicable file. After collecting the input value, UTC timestamp
+    will be generated and appended to the end of file together with the
+    new value. Make sure your system clock is accurate.
 
-    To protect from errors, you will be prompted to enter each value twice.
+    To protect from errors, you will be prompted to enter each value
+    twice.
 
-    To skip entering current value, enter a blank line twice or hit Ctrl-D
-    (Ctl-Z+Return on Windows).
+    To skip entering current value, enter a blank line twice or hit
+    Ctrl-D (Ctl-Z+Return on Windows).
 
     To quit the data entry session, hit Ctrl-C.
     """
     print("Interactive data entry mode. Make sure your system clock is accurate.")
-    print("Your system UTC time is:", format(datetime.utcfromtimestamp(int(time.time()))))
+    print("Your system UTC time is:",
+          format(datetime.utcfromtimestamp(int(time.time()))))
     path = args.path
     if os.path.isfile(path):
         if not path.endswith(".csv"):
@@ -313,9 +326,10 @@ def make_arg_parser():
     export = subparsers.add_parser(
         "export",
         help="export data into a single file",
-        description=("Export data from arbitrary tree of csv files into a" +
-                     " single file (" + Config.export_filename + " by default)," +
-                     " overwriting it. " + Config.errors_filename + " files are ignored."))
+        description=("Export data from arbitrary tree of csv files into a"
+                     " single file (" + Config.export_filename + " by default),"
+                     " overwriting it. " + Config.errors_filename + " files"
+                     " are ignored."))
     export.add_argument(
         "path", nargs="?",
         default=Config.data_dir,
@@ -351,7 +365,8 @@ def main():
         except KeyboardInterrupt:
             print("\naborting")
         except BrokenPipeError:
-            # silence error when e.g. piping into `less` and quitting before reading all
+            # silence error when e.g. piping into `less` and quitting before
+            # reading all
             pass
     else:
         parser.print_usage()
