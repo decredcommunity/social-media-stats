@@ -129,6 +129,7 @@ def export_append_rows(rows, fpath):
             rows.append((ts, platform, account, metric, val))
 
 def export_csv(path, outname):
+    print("exporting path:", path)
     rows = []
     if os.path.isfile(path):
         export_append_rows(rows, path)
@@ -140,6 +141,7 @@ def export_csv(path, outname):
 
     # sort by timestamp, in-place
     rows.sort(key=lambda entry: entry[0])
+    print("found {} data points".format(len(rows)))
 
     # overwrite existing file
     with open(outname, "w", newline="") as outfile:
