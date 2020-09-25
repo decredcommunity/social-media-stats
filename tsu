@@ -6,6 +6,7 @@ import os
 import csv
 import json
 from datetime import datetime
+from itertools import chain
 from urllib.parse import urlparse, urlunparse
 import time
 
@@ -126,11 +127,8 @@ def export_append_rows(rows, fpath):
     plat_acc = strip_prefix(dirname, Config.data_dir + os.sep)
     # platform is the first path component, account is the rest
     platform, account = plat_acc.split(os.sep, maxsplit=1)
-    with open(fpath, newline="") as csvfile:
-        reader = csv.reader(csvfile)
-        for row in reader:
-            ts, val = row
-            rows.append((ts, platform, account, metric, val))
+    for ts, val in csv_iter(fpath):
+        rows.append((ts, platform, account, metric, val))
 
 def export_csv(path, outname):
     rows = []
@@ -158,11 +156,10 @@ def export_csv(path, outname):
     rows.sort()
     print("found {} data points".format(len(rows)))
 
+    header = ("timestamp", "platform", "account", "metric", "value")
+
     # overwrite existing file
-    with open(outname, "w", newline="") as outfile:
-        writer = csv.writer(outfile, lineterminator="\n")
-        writer.writerow(("timestamp", "platform", "account", "metric", "value"))
-        writer.writerows(rows)
+    write_csv(outname, chain([header], rows))
     print("file saved:", outname)
 
 def cmd_export_csv(args):
