@@ -136,8 +136,12 @@ def export_append_rows(rows, fpath, graph):
     # platform is the first path component, account is the rest
     platform, account = plat_acc.split(os.sep, maxsplit=1)
     graph_int = int(graph)
+    tags = ""
+    profile = load_profile(dirname)
+    if profile and ("tags" in profile):
+        tags = " ".join(profile["tags"])
     for ts, val in csv_iter(fpath):
-        rows.append((ts, platform, account, metric, val, graph_int))
+        rows.append((ts, platform, account, metric, val, graph_int, tags))
 
 def export_csv(path, outname, graph_only):
     rows = []
@@ -170,7 +174,8 @@ def export_csv(path, outname, graph_only):
     rows.sort()
     print("found {} data points".format(len(rows)))
 
-    header = ("timestamp", "platform", "account", "metric", "value", "graph")
+    header = ("timestamp", "platform", "account", "metric", "value", "graph",
+              "tags")
 
     # overwrite existing file
     write_csv(outname, chain([header], rows))
