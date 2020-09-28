@@ -125,28 +125,31 @@ def load_profile(dirpath):
     else:
         return None
 
-def metric_path_valid(path):
+def metric_attrs(path):
     parts = path.split(os.sep)
     valid = len(parts) >= 4 and parts[0] == Config.data_dir
-    return valid
+    if not valid:
+        return None
+    # platform is the first path component under Config.data_dir
+    # account is 1+ path components under platform, except the last one
+    platform, *account, metric_ext = parts[1:]
+    account_str = "/".join(account)
+    # metric name is the file name without extension
+    metric = os.path.splitext(metric_ext)[0]
+    return platform, account_str, metric
 
 def export_append_rows(rows, fpath, graph):
     if not fpath.endswith(".csv"):
         return
-    if not metric_path_valid(fpath):
+    attrs = metric_attrs(fpath)
+    if not attrs:
         print("WARNING: skipping unexpected file:", fpath)
         return
 
-    dirpath, filename = os.path.split(fpath)
-    # metric name is the file name without extension
-    metric = os.path.splitext(filename)[0]
-    # strip the `data` directory prefix path component
-    plat_acc = strip_prefix(dirpath, Config.data_dir + os.sep)
-    # platform is the first path component, account is the rest
-    platform, account = plat_acc.split(os.sep, maxsplit=1)
+    platform, account, metric = attrs
     graph_int = int(graph)
     tags = ""
-    profile = load_profile(dirpath)
+    profile = load_profile(os.path.dirname(fpath))
     if profile and ("tags" in profile):
         tags = " ".join(profile["tags"])
     for ts, val in csv_iter(fpath):
