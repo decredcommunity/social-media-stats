@@ -137,16 +137,16 @@ def export_append_rows(rows, fpath, graph):
         print("WARNING: skipping unexpected file:", fpath)
         return
 
-    dirname, fname = os.path.split(fpath)
+    dirpath, filename = os.path.split(fpath)
     # metric name is the file name without extension
-    metric = os.path.splitext(fname)[0]
+    metric = os.path.splitext(filename)[0]
     # strip the `data` directory prefix path component
-    plat_acc = strip_prefix(dirname, Config.data_dir + os.sep)
+    plat_acc = strip_prefix(dirpath, Config.data_dir + os.sep)
     # platform is the first path component, account is the rest
     platform, account = plat_acc.split(os.sep, maxsplit=1)
     graph_int = int(graph)
     tags = ""
-    profile = load_profile(dirname)
+    profile = load_profile(dirpath)
     if profile and ("tags" in profile):
         tags = " ".join(profile["tags"])
     for ts, val in csv_iter(fpath):
@@ -255,23 +255,23 @@ def confirmed_input(prompt, confirm_prompt):
 
 def make_prompt_prefix(path):
     # treat file's parent dir as "account" and filename w/o ext as "metric"
-    dpath, fname = os.path.split(path)
-    adpath = os.path.abspath(dpath)
-    acc = os.path.basename(adpath)
-    metric = os.path.splitext(fname)[0]
+    dirpath, filename = os.path.split(path)
+    absdirpath = os.path.abspath(dirpath)
+    acc = os.path.basename(absdirpath)
+    metric = os.path.splitext(filename)[0]
     return acc + "/" + metric
 
 def entry_file(path):
     if not path.endswith(".csv"):
         raise TsuError("expected a csv file but got: " + path)
-    dname, fname = os.path.split(path)
+    dirpath, filename = os.path.split(path)
 
     prompt_prefix = make_prompt_prefix(path)
 
-    hint = make_hint(dname, fname)
+    hint = make_hint(dirpath, filename)
     print("{}: capture the value for {}".format(prompt_prefix, hint))
 
-    int_values = fname not in STRING_VALUE_FILES
+    int_values = filename not in STRING_VALUE_FILES
     rows = list(csv_iter(path)) # read all to get the length
     had_values = len(rows) > 0
     if had_values:
