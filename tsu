@@ -125,9 +125,18 @@ def load_profile(dirpath):
     else:
         return None
 
+def metric_path_valid(path):
+    parts = path.split(os.sep)
+    valid = len(parts) >= 4 and parts[0] == Config.data_dir
+    return valid
+
 def export_append_rows(rows, fpath, graph):
     if not fpath.endswith(".csv"):
         return
+    if not metric_path_valid(fpath):
+        print("WARNING: skipping unexpected file:", fpath)
+        return
+
     dirname, fname = os.path.split(fpath)
     # metric name is the file name without extension
     metric = os.path.splitext(fname)[0]
