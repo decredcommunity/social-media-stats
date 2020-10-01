@@ -11,7 +11,7 @@ from urllib.parse import urlparse, urlunparse
 import time
 
 class Config:
-    data_dir            = "data"
+    data_dir            = "data/data"
     errors_filename     = "errors.csv"
     export_filename     = "export.csv"
     profile_filename    = "profile.json"
@@ -126,13 +126,18 @@ def load_profile(dirpath):
         return None
 
 def metric_attrs(path):
-    parts = path.split(os.sep)
-    valid = len(parts) >= 4 and parts[0] == Config.data_dir
+    prefix = Config.data_dir + os.sep
+    if not path.startswith(prefix):
+        # didn't consider this case thoroughly
+        return None
+    innerpath = strip_prefix(path, prefix)
+    parts = innerpath.split(os.sep)
+    valid = len(parts) >= 3
     if not valid:
         return None
     # platform is the first path component under Config.data_dir
     # account is 1+ path components under platform, except the last one
-    platform, *account, metric_ext = parts[1:]
+    platform, *account, metric_ext = parts
     account_str = "/".join(account)
     # metric name is the file name without extension
     metric = os.path.splitext(metric_ext)[0]
