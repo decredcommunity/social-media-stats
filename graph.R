@@ -40,7 +40,7 @@ p.twitter.regional = ggplot(twitter.regional)+
   labs(title = "Twitter account stats")
 
 
-ggsave("twitter-regional-accounts.png", width = 8, height = 6)
+ggsave("twitter-regional.png", width = 8, height = 6)
 
 
 twitter.rest = twitter %>%
@@ -60,7 +60,7 @@ p.twitter.rest = ggplot(twitter.filtered)+
   labs(title = "Twitter account stats")
 
 
-ggsave("twitter-accounts-the-rest.png", width = 8, height = 6)
+ggsave("twitter-other.png", width = 8, height = 6)
 
 
 
@@ -116,7 +116,7 @@ p.tele.decred = ggplot(df.tele.decred)+
   geom_point()+
   facet_grid(metric ~ ., scales = "free_y")+
   labs(title = "Telegram")
-ggsave("telegram-Decred-account.png", width = 8, height = 6)
+ggsave("telegram-Decred.png", width = 8, height = 6)
 
 df.tele.rest = df.tele %>%
   filter(account != "Decred")
