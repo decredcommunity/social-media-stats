@@ -37,7 +37,7 @@ def parse(entry, int_val=True):
         tsi = int(s1)
     except ValueError as e:
         es = "timestamp is not an integer: '{}'".format(s1)
-        raise ValidationError() from e
+        raise ValidationError(es) from e
     try:
         dt = datetime.utcfromtimestamp(tsi)
     except Exception as e:
