@@ -270,12 +270,12 @@ def confirmed_input(prompt, confirm_prompt):
         prev = cur
 
 def make_prompt_prefix(path):
-    # treat file's parent dir as "account" and filename w/o ext as "metric"
-    dirpath, filename = os.path.split(path)
-    absdirpath = os.path.abspath(dirpath)
-    acc = os.path.basename(absdirpath)
-    metric = os.path.splitext(filename)[0]
-    return acc + "/" + metric
+    attrs = metric_attrs(path)
+    if not attrs:
+        print("WARNING: could not determine account/metric for:", path)
+        return "n/a"
+    _, account, metric = attrs
+    return account + "/" + metric
 
 def entry_file(path):
     dirpath, filename = os.path.split(path)
