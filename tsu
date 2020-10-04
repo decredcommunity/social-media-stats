@@ -28,9 +28,6 @@ class TsuError(Exception):
 class ValidationError(TsuError):
     pass
 
-class CommandError(TsuError):
-    pass
-
 def parse(entry, valtype):
     if len(entry) != 2:
         es = "entry must have exactly 2 fields: " + str(entry)
@@ -102,7 +99,7 @@ def validate(path, view=False):
 def cmd_view(args):
     path = args.file
     if not os.path.isfile(path):
-        raise CommandError("expected a file but got a directory: " + path)
+        raise TsuError("expected a file but got a directory: " + path)
     # try to handle the file regardless of its type
     validate(args.file, view=True)
 
