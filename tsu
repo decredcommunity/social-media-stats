@@ -12,10 +12,13 @@ import time
 
 class Config:
     data_dir            = "data/data"
-    errors_filename     = "errors.csv"
     export_filename     = "export.csv"
     profile_filename    = "profile.json"
     graph_list_file     = "graph.list"
+
+class Const:
+    int_exts            = (".csv", ".tsi")
+    str_exts            = (".tss", )
 
 # Define and catch our own exception to avoid intercepting language and library
 # exceptions.
@@ -28,7 +31,7 @@ class ValidationError(TsuError):
 class CommandError(TsuError):
     pass
 
-def parse(entry, int_val=True):
+def parse(entry, valtype):
     if len(entry) != 2:
         es = "entry must have exactly 2 fields: " + str(entry)
         raise ValidationError(es)
@@ -43,7 +46,7 @@ def parse(entry, int_val=True):
     except Exception as e:
         es = "cannot parse datetime from timestamp: '{}'".format(tsi)
         raise ValidationError(es) from e
-    if int_val:
+    if valtype == int:
         try:
             val = int(s2)
         except ValueError as e:
@@ -56,7 +59,14 @@ def parse(entry, int_val=True):
             raise ValidationError("value is empty")
     return dt, val
 
-STRING_VALUE_FILES = frozenset([Config.errors_filename])
+def value_type(path):
+    ext = os.path.splitext(path)[1]
+    if ext in Const.int_exts:
+        return int
+    elif ext in Const.str_exts:
+        return str
+    else:
+        return None
 
 def csv_iter(filename):
     """Generator yielding rows of the csv file."""
@@ -70,19 +80,19 @@ def write_csv(filename, rows):
         writer.writerows(rows)
 
 def validate(path, view=False):
-    int_values = os.path.basename(path) not in STRING_VALUE_FILES
+    valtype = value_type(path)
     prev_dt = datetime.min
 
     # start counting from 1 to match file line number
     for line_num, row in enumerate(csv_iter(path), start=1):
         try:
-            dt, val = parse(row, int_values)
+            dt, val = parse(row, valtype)
             if dt <= prev_dt:
                 es = "timestamp '{}' must be greater than '{}'".format(dt, prev_dt)
                 raise ValidationError(es)
             prev_dt = dt
             if view:
-                if int_values:
+                if valtype == int:
                     print(dt, "{:>6,}".format(val))
                 else:
                     print(dt, val)
@@ -93,19 +103,19 @@ def cmd_view(args):
     path = args.file
     if not os.path.isfile(path):
         raise CommandError("expected a file but got a directory: " + path)
-    if not path.endswith(".csv"):
-        raise CommandError("expected a csv file but got: " + path)
-    validate(args.file, True)
+    # try to handle the file regardless of its type
+    validate(args.file, view=True)
 
 def cmd_validate(args):
     path = args.path
     if os.path.isfile(path):
-        # todo: raise ex if not path.endswith(".csv")
+        # try to handle the file regardless of its type
         validate(path)
     elif os.path.isdir(path):
         for curdir, dirs, files in os.walk(path):
             for fname in files:
-                if fname.endswith(".csv"):
+                # only validate files of known type
+                if value_type(fname) is not None:
                     validate(os.path.join(curdir, fname))
 
 def load_list(path):
@@ -144,8 +154,6 @@ def metric_attrs(path):
     return platform, account_str, metric
 
 def export_append_rows(rows, fpath, graph):
-    if not fpath.endswith(".csv"):
-        return
     attrs = metric_attrs(fpath)
     if not attrs:
         print("WARNING: skipping unexpected file:", fpath)
@@ -163,7 +171,7 @@ def export_append_rows(rows, fpath, graph):
 def export_csv(path, outname, graph_only):
     rows = []
     if os.path.isfile(path):
-        # bypass all filters if file is specified directly (not via directory)
+        # try to handle the file regardless of its type
         export_append_rows(rows, path)
     else:
         graph_paths = []
@@ -180,12 +188,12 @@ def export_csv(path, outname, graph_only):
         for ep in export_paths:
             for curdir, dirs, files in os.walk(ep):
                 for fname in files:
-                    if fname == Config.errors_filename:
-                        continue
-                    fpath = os.path.join(curdir, fname)
-                    # set `graph` column to True if the file is whitelisted
-                    graph = any(map(fpath.startswith, graph_paths))
-                    export_append_rows(rows, fpath, graph)
+                    # only export files with int values
+                    if value_type(fname) == int:
+                        fpath = os.path.join(curdir, fname)
+                        # set `graph` column to True if the file is whitelisted
+                        graph = any(map(fpath.startswith, graph_paths))
+                        export_append_rows(rows, fpath, graph)
 
     # sort by timestamp, in-place
     rows.sort()
@@ -270,8 +278,6 @@ def make_prompt_prefix(path):
     return acc + "/" + metric
 
 def entry_file(path):
-    if not path.endswith(".csv"):
-        raise TsuError("expected a csv file but got: " + path)
     dirpath, filename = os.path.split(path)
 
     prompt_prefix = make_prompt_prefix(path)
@@ -279,17 +285,17 @@ def entry_file(path):
     hint = make_hint(dirpath, filename)
     print("{}: capture the value for {}".format(prompt_prefix, hint))
 
-    int_values = filename not in STRING_VALUE_FILES
+    valtype = value_type(filename)
     rows = list(csv_iter(path)) # read all to get the length
     had_values = len(rows) > 0
     if had_values:
-        last_dt, last_val = parse(rows[-1], int_values)
+        last_dt, last_val = parse(rows[-1], valtype)
         # extra output for a sanity check
         print("{}: last record is: time {}, value {}".format(
             prompt_prefix, last_dt, last_val))
 
     delta = ""
-    if int_values:
+    if valtype == int:
         while True: # entry loop for int value
             ok, s = confirmed_input(
                 "{}: enter integer value: ".format(prompt_prefix),
@@ -340,19 +346,21 @@ def cmd_entry(args):
           format(datetime.utcfromtimestamp(int(time.time()))))
     path = args.path
     if os.path.isfile(path):
-        if not path.endswith(".csv"):
-            raise CommandError("expected a csv file but got: " + path)
+        # try to handle the file regardless of its type
         entry_file(path)
     elif os.path.isdir(path):
         for curdir, dirs, files in os.walk(path):
             for fname in files:
-                if fname.endswith(".csv"):
+                # only prompt entry for int values
+                if value_type(fname) == int:
                     entry_file(os.path.join(curdir, fname))
 
 def make_arg_parser():
     import argparse
 
-    parser = argparse.ArgumentParser(description="time series utility")
+    parser = argparse.ArgumentParser(
+        description=("time series utility. The following file types are"
+                     "supported: " + ", ".join(Const.int_exts + Const.str_exts)))
     subparsers = parser.add_subparsers(dest="command", title="commands")
 
     validate = subparsers.add_parser(
@@ -361,7 +369,7 @@ def make_arg_parser():
     validate.add_argument(
         "path", nargs="?",
         default=Config.data_dir,
-        help="path to search csv files")
+        help="path to search time series files")
     validate.set_defaults(func=cmd_validate)
 
     view = subparsers.add_parser(
@@ -375,14 +383,13 @@ def make_arg_parser():
     export = subparsers.add_parser(
         "export",
         help="export data into a single file",
-        description=("Export data from arbitrary tree of csv files into a"
-                     " single file (" + Config.export_filename + " by default),"
-                     " overwriting it. " + Config.errors_filename + " files"
-                     " are ignored."))
+        description=("Export data from arbitrary tree of time series files"
+                     " into a single file (" + Config.export_filename +
+                     " by default), overwriting it."))
     export.add_argument(
         "path", nargs="?",
         default=Config.data_dir,
-        help="path to search csv files")
+        help="path to search time series files")
     export.add_argument(
         "-g", "--graph-only",
         action="store_true",
@@ -401,7 +408,8 @@ def make_arg_parser():
         "path", nargs="?",
         default=Config.data_dir,
         help="file or directory path to enter data in; if directory, the"
-             " program will prompt data entry for each CSV file found in it")
+             " program will prompt data entry for each time sieries file found"
+             " in it")
     entry.set_defaults(func=cmd_entry)
 
     return parser
