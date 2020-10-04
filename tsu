@@ -30,25 +30,25 @@ class ValidationError(TsuError):
 
 def parse(entry, valtype):
     if len(entry) != 2:
-        es = "entry must have exactly 2 fields: " + str(entry)
-        raise ValidationError(es)
+        raise ValidationError(
+            "entry must have exactly 2 fields: " + str(entry))
     s1, s2 = entry
     try:
         tsi = int(s1)
     except ValueError as e:
-        es = "timestamp is not an integer: '{}'".format(s1)
-        raise ValidationError(es) from e
+        raise ValidationError(
+            "timestamp is not an integer: '{}'".format(s1)) from e
     try:
         dt = datetime.utcfromtimestamp(tsi)
     except Exception as e:
-        es = "cannot parse datetime from timestamp: '{}'".format(tsi)
-        raise ValidationError(es) from e
+        raise ValidationError(
+            "cannot parse datetime from timestamp: '{}'".format(tsi)) from e
     if valtype == int:
         try:
             val = int(s2)
         except ValueError as e:
-            es = "value is not an integer: '{}'".format(s2)
-            raise ValidationError(es) from e
+            raise ValidationError(
+                "value is not an integer: '{}'".format(s2)) from e
     else:
         if len(s2) > 0:
             val = s2
@@ -91,8 +91,8 @@ def validate(path, view=False):
         try:
             dt, val = parse(row, valtype)
             if dt <= prev_dt:
-                es = "timestamp '{}' must be greater than '{}'".format(dt, prev_dt)
-                raise ValidationError(es)
+                raise ValidationError(
+                    "timestamp '{}' must be greater than '{}'".format(dt, prev_dt))
             prev_dt = dt
             if view:
                 print_entry(dt, val, valtype)
