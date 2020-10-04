@@ -76,6 +76,12 @@ def write_csv(filename, rows):
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
         writer.writerows(rows)
 
+def print_entry(dt, val, valtype):
+    if valtype == int:
+        print(dt, "{:>6,}".format(val))
+    else:
+        print(dt, val)
+
 def validate(path, view=False):
     valtype = value_type(path)
     prev_dt = datetime.min
@@ -89,10 +95,7 @@ def validate(path, view=False):
                 raise ValidationError(es)
             prev_dt = dt
             if view:
-                if valtype == int:
-                    print(dt, "{:>6,}".format(val))
-                else:
-                    print(dt, val)
+                print_entry(dt, val, valtype)
         except ValidationError as e:
             print("err {}:{}: {}".format(path, line_num, e))
 
