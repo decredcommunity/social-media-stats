@@ -102,7 +102,7 @@ def validate(path, view=False):
 def cmd_view(args):
     path = args.file
     if not os.path.isfile(path):
-        raise TsuError("expected a file but got a directory: " + path)
+        raise TsuError("path is not a file: " + path)
     # try to handle the file regardless of its type
     validate(args.file, view=True)
 
