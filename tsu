@@ -340,6 +340,16 @@ def datetime_greater(other):
             raise ValueError("timestamp must be greater than " + str(other))
     return validator
 
+def timestamp_input(prompt_prefix, min_ts):
+    while True:
+        converter = datetime_greater(min_ts) if min_ts else datetime_converter
+        inp = validated_input(prompt_prefix, "timestamp", converter)
+        if isinstance(inp, Command):
+            print("{}: error: commands are not allowed while entering"
+                  " timestamp".format(prompt_prefix))
+        else:
+            return inp
+
 def identity(x):
     return x
 
@@ -383,21 +393,13 @@ def entry_file(path):
             print("{}: skipping".format(prompt_prefix))
             return
         elif isinstance(inp, TimestampCommand):
-            dt_converter = (datetime_greater(last_dt) if last_dt
-                            else datetime_converter)
-            inp2 = validated_input(prompt_prefix, "timestamp", dt_converter)
-            if isinstance(inp2, Command):
-                print("{}: error: commands are not allowed while entering"
-                      " timestamp".format(prompt_prefix))
-                continue # main entry loop
-            if isinstance(inp2, InputCancel):
-                print("{}: timestamp entry canceled".format(prompt_prefix))
-                continue # main entry loop
-            else:
-                dt_custom = inp2
+            dt_inp = timestamp_input(prompt_prefix, last_dt)
+            if isinstance(dt_inp, datetime):
                 print("{}: using timestamp {} for current metric only".format(
-                      prompt_prefix, dt_custom))
-                continue # main entry loop
+                      prompt_prefix, dt_inp))
+                dt_custom = dt_inp
+            elif isinstance(dt_inp, InputCancel):
+                print("{}: timestamp entry canceled".format(prompt_prefix))
         elif isinstance(inp, SpecialValue):
             raise Exception("unexpected SpecialValue: " + str(inp))
         else:
