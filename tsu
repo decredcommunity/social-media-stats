@@ -331,6 +331,15 @@ def datetime_converter(s):
 
     return dt
 
+def datetime_greater(other):
+    def validator(s):
+        dt = datetime_converter(s)
+        if dt > other:
+            return dt
+        else:
+            raise ValueError("timestamp must be greater than " + str(other))
+    return validator
+
 def identity(x):
     return x
 
@@ -352,8 +361,8 @@ def entry_file(path):
 
     valtype = value_type(filename)
     rows = list(csv_iter(path)) # read all to get the length
-    had_values = len(rows) > 0
-    if had_values:
+    last_dt, last_val = None, None
+    if len(rows) > 0:
         last_dt, last_val = parse(rows[-1], valtype)
         # extra output for a sanity check
         print("{}: last record is: time {}, value {}".format(
@@ -374,8 +383,9 @@ def entry_file(path):
             print("{}: skipping".format(prompt_prefix))
             return
         elif isinstance(inp, TimestampCommand):
-            inp2 = validated_input(prompt_prefix, "timestamp",
-                                   datetime_converter)
+            dt_converter = (datetime_greater(last_dt) if last_dt
+                            else datetime_converter)
+            inp2 = validated_input(prompt_prefix, "timestamp", dt_converter)
             if isinstance(inp2, Command):
                 print("{}: error: commands are not allowed while entering"
                       " timestamp".format(prompt_prefix))
@@ -383,14 +393,9 @@ def entry_file(path):
             if isinstance(inp2, InputCancel):
                 print("{}: timestamp entry canceled".format(prompt_prefix))
                 continue # main entry loop
-            dt_candidate = inp2
-            if had_values and (dt_candidate <= last_dt):
-                print("{}: error: timestamp not greater than latest {}".format(
-                      prompt_prefix, last_dt))
-                continue # main entry loop
             else:
-                dt_custom = dt_candidate
-                print("{}: using time {} for current metric only".format(
+                dt_custom = inp2
+                print("{}: using timestamp {} for current metric only".format(
                       prompt_prefix, dt_custom))
                 continue # main entry loop
         elif isinstance(inp, SpecialValue):
@@ -399,8 +404,8 @@ def entry_file(path):
             val = inp
             break # main entry loop
 
-    if valtype == int:
-        delta = " ({:+})".format(val - last_val) if had_values else ""
+    if valtype == int and last_val:
+        delta = " ({:+})".format(val - last_val)
     else:
         delta = ""
 
