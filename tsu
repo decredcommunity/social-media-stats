@@ -5,7 +5,7 @@
 import os
 import csv
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from itertools import chain
 from urllib.parse import urlparse, urlunparse
 import time
@@ -235,6 +235,12 @@ def make_hint(dirpath, default_hint):
 
     return hint if hint else default_hint
 
+class SpecialValue:
+    pass
+
+class InputCancel(SpecialValue):
+    pass
+
 def optional_input(prompt):
     """Read a string from standard input, cancel on double blank entry.
 
@@ -246,28 +252,87 @@ def optional_input(prompt):
         if s == "":
             s = input("enter blank again to skip or a value to continue: ")
             if s == "":
-                return (False, None)
-        return (True, s)
+                return InputCancel()
+        return s
     except EOFError:
         print("(got EOF)")
-        return (False, None)
+        return InputCancel()
+
+class Command(SpecialValue):
+    pass
+
+class TimestampCommand(Command):
+    pass
+
+def command_input(prompt):
+    while True:
+        inp = optional_input(prompt)
+        if isinstance(inp, str) and inp.startswith(":"):
+            if inp == ":t":
+                return TimestampCommand()
+            else:
+                raise ValueError("unknown command '{}'".format(inp))
+        else:
+            return inp
 
 def confirmed_input(prompt, confirm_prompt):
     """Read inputs until two subsequent inputs match, cancel on blank input.
 
     If user cancels input, return what optional_input returned.
     """
-    # set up the loop
-    ok, prev = optional_input(prompt)
-    if not ok:
-        return (ok, prev)
+    inp = command_input(prompt)
+    if isinstance(inp, SpecialValue):
+        return inp
 
+    prev = inp
     # keep collecting inputs until (a) two inputs match or (b) input is canceled
     while True:
-        ok, cur = optional_input(confirm_prompt)
-        if (not ok) or (cur == prev):
-            return (ok, cur)
+        cur = optional_input(confirm_prompt)
+        if (cur == prev) or isinstance(cur, SpecialValue):
+            return cur
         prev = cur
+
+def validated_input(prompt_prefix, typedesc, converter):
+    while True:
+        try:
+            inp = confirmed_input(
+                "{}: enter {} value: ".format(prompt_prefix, typedesc),
+                "{}: confirm {} value: ".format(prompt_prefix, typedesc))
+            if isinstance(inp, SpecialValue):
+                return inp
+            return converter(inp)
+        except ValueError as e:
+            print("{}: error: {}".format(prompt_prefix, str(e)))
+
+def int_converter(s):
+    try:
+        return int(s)
+    except ValueError as e:
+        raise ValueError("expected an integer but got: " + s)
+
+def parse_date(date_string, format):
+    # extend datetime.strptime formats with %s from the `date` program
+    if format == "%s":
+        return datetime.utcfromtimestamp(int(date_string))
+    else:
+        return datetime.strptime(date_string, format)
+
+def datetime_converter(s):
+    dt = None
+    for f in ["%d %b %Y %H:%M:%S", "%Y-%m-%d %H:%M:%S", "%s"]:
+        try:
+            dt = parse_date(s, f)
+            break
+        except ValueError:
+            pass
+
+    if not dt:
+        raise ValueError("unrecognized date value: " + s)
+
+    return dt
+
+def identity(x):
+    return x
 
 def make_prompt_prefix(path):
     attrs = metric_attrs(path)
@@ -294,36 +359,55 @@ def entry_file(path):
         print("{}: last record is: time {}, value {}".format(
             prompt_prefix, last_dt, last_val))
 
-    delta = ""
     if valtype == int:
-        while True: # entry loop for int value
-            ok, s = confirmed_input(
-                "{}: enter integer value: ".format(prompt_prefix),
-                "{}: confirm integer value: ".format(prompt_prefix))
-            if not ok:
-                print("{}: skipping".format(prompt_prefix))
-                return
-            try:
-                val = int(s)
-                break # entry loop
-            except ValueError as e:
-                print("{}: expected an integer but got: {}".format(prompt_prefix, s))
-
-        delta = " ({:+})".format(val - last_val) if had_values else ""
+        typedesc, converter = "integer", int_converter
+    elif valtype == str:
+        typedesc, converter = "string", identity
     else:
-        ok, s = confirmed_input(
-            "{}: enter string value: ".format(prompt_prefix),
-            "{}: confirm string value: ".format(prompt_prefix))
-        if not ok:
+        raise Exception("unexpected value type: " + str(valtype))
+
+    dt_custom = None
+    while True: # main entry loop
+        inp = validated_input(prompt_prefix, typedesc, converter)
+        dt = dt_custom if dt_custom else datetime.utcnow().replace(microsecond=0)
+        if isinstance(inp, InputCancel):
             print("{}: skipping".format(prompt_prefix))
             return
-        val = s
+        elif isinstance(inp, TimestampCommand):
+            inp2 = validated_input(prompt_prefix, "timestamp",
+                                   datetime_converter)
+            if isinstance(inp2, Command):
+                print("{}: error: commands are not allowed while entering"
+                      " timestamp".format(prompt_prefix))
+                continue # main entry loop
+            if isinstance(inp2, InputCancel):
+                print("{}: timestamp entry canceled".format(prompt_prefix))
+                continue # main entry loop
+            dt_candidate = inp2
+            if had_values and (dt_candidate <= last_dt):
+                print("{}: error: timestamp not greater than latest {}".format(
+                      prompt_prefix, last_dt))
+                continue # main entry loop
+            else:
+                dt_custom = dt_candidate
+                print("{}: using time {} for current metric only".format(
+                      prompt_prefix, dt_custom))
+                continue # main entry loop
+        elif isinstance(inp, SpecialValue):
+            raise Exception("unexpected SpecialValue: " + str(inp))
+        else:
+            val = inp
+            break # main entry loop
 
-    now = int(time.time())
-    rows.append((now, val))
+    if valtype == int:
+        delta = " ({:+})".format(val - last_val) if had_values else ""
+    else:
+        delta = ""
+
+    ts = int(dt.replace(tzinfo=timezone.utc).timestamp())
+    rows.append((ts, val))
     write_csv(path, rows)
-    print("{}: saved: time {}, value {}{}".format(
-        prompt_prefix, datetime.utcfromtimestamp(now), val, delta))
+    print("{}: saved: time {}, value {}{}".format(prompt_prefix, dt, val, delta))
 
 def cmd_entry(args):
     """Enter data manually in an interactive session.
@@ -338,6 +422,8 @@ def cmd_entry(args):
 
     To skip entering current value, enter a blank line twice or hit
     Ctrl-D (Ctl-Z+Return on Windows).
+
+    To enter the timestamp manually, enter ':t' instead of the value.
 
     To quit the data entry session, hit Ctrl-C.
     """
