@@ -287,7 +287,7 @@ def confirmed_input(prompt, confirm_prompt):
     prev = inp
     # keep collecting inputs until (a) two inputs match or (b) input is canceled
     while True:
-        cur = optional_input(confirm_prompt)
+        cur = command_input(confirm_prompt)
         if (cur == prev) or isinstance(cur, SpecialValue):
             return cur
         prev = cur
