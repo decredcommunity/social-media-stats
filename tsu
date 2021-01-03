@@ -383,9 +383,10 @@ def entry_file(path):
     dirpath, filename = os.path.split(path)
 
     prompt_prefix = make_prompt_prefix(path) + ": "
+    printer = lambda s: print(prompt_prefix + s)
 
     hint = make_hint(dirpath, filename)
-    print("{}capture the value for {}".format(prompt_prefix, hint))
+    printer("capture the value for" + hint)
 
     valtype = value_type(filename)
     rows = list(csv_iter(path)) # read all to get the length
@@ -393,10 +394,7 @@ def entry_file(path):
     if len(rows) > 0:
         last_dt, last_val = parse(rows[-1], valtype)
         # extra output for a sanity check
-        print("{}last record is: time {}, value {}".format(
-            prompt_prefix, last_dt, last_val))
-
-    printer = lambda s: print(prompt_prefix + s)
+        printer("last record is: time {}, value {}".format(last_dt, last_val))
 
     if valtype == int:
         input = make_input(prompt_prefix, "integer", int_converter, printer)
@@ -410,16 +408,15 @@ def entry_file(path):
         inp = input()
         dt = dt_custom if dt_custom else datetime.utcnow().replace(microsecond=0)
         if isinstance(inp, InputCancel):
-            print("{}skipping".format(prompt_prefix))
+            printer("skipping")
             return
         elif isinstance(inp, TimestampCommand):
             dt_inp = timestamp_input(prompt_prefix, last_dt, printer)
             if isinstance(dt_inp, datetime):
-                print("{}using timestamp {} for current metric only".format(
-                      prompt_prefix, dt_inp))
+                printer("using timestamp {} for current metric only".format(dt_inp))
                 dt_custom = dt_inp
             elif isinstance(dt_inp, InputCancel):
-                print("{}timestamp entry canceled".format(prompt_prefix))
+                printer("timestamp entry canceled")
         elif isinstance(inp, SpecialValue):
             raise Exception("unexpected SpecialValue: " + str(inp))
         else:
@@ -434,7 +431,7 @@ def entry_file(path):
     ts = int(dt.replace(tzinfo=timezone.utc).timestamp())
     rows.append((ts, val))
     write_csv(path, rows)
-    print("{}saved: time {}, value {}{}".format(prompt_prefix, dt, val, delta))
+    printer("saved: time {}, value {}{}".format(dt, val, delta))
 
 def cmd_entry(args):
     """Enter data manually in an interactive session.
