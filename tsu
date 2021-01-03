@@ -242,18 +242,14 @@ class SpecialValue:
 class InputCancel(SpecialValue):
     pass
 
-def base_input(prompt="", default_prompt=""):
-    """An input with a fallback default_prompt used if prompt is empty."""
-    return input(prompt if prompt else default_prompt)
-
-def optional_input(input):
+def optional_input(prompt, input):
     """Read a string, cancel if blank line entered twice.
 
     Use the passed input function for reading. Return a value or an
     InputCancel instance to signal cancellation by the user.
     """
     try:
-        s = input()
+        s = input(prompt)
         if s == "":
             s = input("enter blank again to skip or a value to continue: ")
             if s == "":
@@ -269,9 +265,9 @@ class Command(SpecialValue):
 class TimestampCommand(Command):
     pass
 
-def command_input(input):
+def command_input(prompt, input):
     while True:
-        inp = input()
+        inp = input(prompt)
         if isinstance(inp, str) and inp.startswith(":"):
             if inp == ":t":
                 return TimestampCommand()
@@ -281,27 +277,27 @@ def command_input(input):
             return inp
 
 
-def confirmed_input(input, confirm_input):
+def confirmed_input(prompt, confirm_prompt, input):
     """Read inputs until two subsequent inputs match, cancel on blank input.
 
     If user cancels input, return what optional_input returned.
     """
-    inp = input()
+    inp = input(prompt)
     if isinstance(inp, SpecialValue):
         return inp
 
     prev = inp
     # keep collecting inputs until (a) two inputs match or (b) input is canceled
     while True:
-        cur = confirm_input()
+        cur = input(confirm_prompt)
         if (cur == prev) or isinstance(cur, SpecialValue):
             return cur
         prev = cur
 
-def validated_input(input, converter, printer):
+def validated_input(prompt, converter, printer, input):
     while True:
         try:
-            inp = input()
+            inp = input(prompt)
             if isinstance(inp, SpecialValue):
                 return inp
             return converter(inp)
@@ -344,19 +340,14 @@ def datetime_greater(other):
             raise ValueError("timestamp must be greater than " + str(other))
     return validator
 
-def make_validated_input(prompt, converter, printer):
-    base = partial(base_input, default_prompt=prompt)
-    cancelable = partial(optional_input, base)
-    command = partial(command_input, cancelable)
-    validated = partial(validated_input, command, converter, printer)
-    return validated
-
 def make_input(prefix, typedesc, converter, printer):
+    cancelable = partial(optional_input, input=input)
+    command = partial(command_input, input=cancelable)
+    validated = partial(validated_input, converter=converter, printer=printer,
+                        input=command)
     initial_prompt = prefix + "enter {} value: ".format(typedesc)
     confirm_prompt = prefix + "confirm {} value: ".format(typedesc)
-    return partial(confirmed_input,
-                   make_validated_input(initial_prompt, converter, printer),
-                   make_validated_input(confirm_prompt, converter, printer))
+    return partial(confirmed_input, initial_prompt, confirm_prompt, validated)
 
 def timestamp_input(prefix, min_ts, printer):
     converter = datetime_greater(min_ts) if min_ts else datetime_converter
