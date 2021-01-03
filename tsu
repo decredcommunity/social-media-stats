@@ -6,6 +6,7 @@ import os
 import csv
 import json
 from datetime import datetime, timezone
+from functools import partial
 from itertools import chain
 from urllib.parse import urlparse, urlunparse
 import time
@@ -241,14 +242,18 @@ class SpecialValue:
 class InputCancel(SpecialValue):
     pass
 
-def optional_input(prompt):
-    """Read a string from standard input, cancel on double blank entry.
+def base_input(prompt="", default_prompt=""):
+    """An input with a fallback default_prompt used if prompt is empty."""
+    return input(prompt if prompt else default_prompt)
 
-    Wrap standard input() and return (True, string) on success or
-    (False, None) if user cancels.
+def optional_input(input):
+    """Read a string, cancel if blank line entered twice.
+
+    Use the passed input function for reading. Return a value or an
+    InputCancel instance to signal cancellation by the user.
     """
     try:
-        s = input(prompt)
+        s = input()
         if s == "":
             s = input("enter blank again to skip or a value to continue: ")
             if s == "":
@@ -264,9 +269,9 @@ class Command(SpecialValue):
 class TimestampCommand(Command):
     pass
 
-def command_input(prompt):
+def command_input(input):
     while True:
-        inp = optional_input(prompt)
+        inp = input()
         if isinstance(inp, str) and inp.startswith(":"):
             if inp == ":t":
                 return TimestampCommand()
@@ -275,32 +280,33 @@ def command_input(prompt):
         else:
             return inp
 
-def confirmed_input(input_prefix, confirm_prefix, print_prefix, typedesc, converter):
+
+def confirmed_input(input, confirm_input):
     """Read inputs until two subsequent inputs match, cancel on blank input.
 
     If user cancels input, return what optional_input returned.
     """
-    inp = validated_input(input_prefix, print_prefix, typedesc, converter)
+    inp = input()
     if isinstance(inp, SpecialValue):
         return inp
 
     prev = inp
     # keep collecting inputs until (a) two inputs match or (b) input is canceled
     while True:
-        cur = validated_input(confirm_prefix, print_prefix, typedesc, converter)
+        cur = confirm_input()
         if (cur == prev) or isinstance(cur, SpecialValue):
             return cur
         prev = cur
 
-def validated_input(prompt_prefix, print_prefix, typedesc, converter):
+def validated_input(input, converter, printer=print):
     while True:
         try:
-            inp = command_input("{}{} value: ".format(prompt_prefix, typedesc))
+            inp = input()
             if isinstance(inp, SpecialValue):
                 return inp
             return converter(inp)
         except ValueError as e:
-            print("{}: error: {}".format(print_prefix, str(e)))
+            printer("error: {}".format(str(e)))
 
 def int_converter(s):
     try:
@@ -338,13 +344,23 @@ def datetime_greater(other):
             raise ValueError("timestamp must be greater than " + str(other))
     return validator
 
-def timestamp_input(input_prefix, confirm_prefix, print_prefix, min_ts):
+def make_input(prefix, prompt, converter):
+    base = partial(base_input, default_prompt=prefix + prompt)
+    cancelable = partial(optional_input, base)
+    command = partial(command_input, cancelable)
+    validated = partial(validated_input, command, converter,
+                        lambda s: print(prefix + s))
+    confirmed = partial(confirmed_input, validated, validated)
+    return confirmed
+
+def timestamp_input(prefix, min_ts):
+    converter = datetime_greater(min_ts) if min_ts else datetime_converter
+    input = make_input(prefix, "enter timestamp value: ", converter)
     while True:
-        converter = datetime_greater(min_ts) if min_ts else datetime_converter
-        inp = confirmed_input(input_prefix, confirm_prefix, print_prefix, "timestamp", converter)
+        inp = input()
         if isinstance(inp, Command):
-            print("{}: error: commands are not allowed while entering"
-                  " timestamp".format(print_prefix))
+            print(prefix + "error: commands are not allowed while entering"
+                  " timestamp")
         else:
             return inp
 
@@ -362,10 +378,10 @@ def make_prompt_prefix(path):
 def entry_file(path):
     dirpath, filename = os.path.split(path)
 
-    prompt_prefix = make_prompt_prefix(path)
+    prompt_prefix = make_prompt_prefix(path) + ": "
 
     hint = make_hint(dirpath, filename)
-    print("{}: capture the value for {}".format(prompt_prefix, hint))
+    print("{}capture the value for {}".format(prompt_prefix, hint))
 
     valtype = value_type(filename)
     rows = list(csv_iter(path)) # read all to get the length
@@ -373,33 +389,31 @@ def entry_file(path):
     if len(rows) > 0:
         last_dt, last_val = parse(rows[-1], valtype)
         # extra output for a sanity check
-        print("{}: last record is: time {}, value {}".format(
+        print("{}last record is: time {}, value {}".format(
             prompt_prefix, last_dt, last_val))
 
     if valtype == int:
-        typedesc, converter = "integer", int_converter
+        input = make_input(prompt_prefix, "enter integer value: ", int_converter)
     elif valtype == str:
-        typedesc, converter = "string", identity
+        input = make_input(prompt_prefix, "enter string value: ", identity)
     else:
         raise Exception("unexpected value type: " + str(valtype))
 
-    input_prefix = prompt_prefix + ": enter "
-    confirm_prefix = prompt_prefix + ": confirm "
     dt_custom = None
     while True: # main entry loop
-        inp = confirmed_input(input_prefix, confirm_prefix, prompt_prefix, typedesc, converter)
+        inp = input()
         dt = dt_custom if dt_custom else datetime.utcnow().replace(microsecond=0)
         if isinstance(inp, InputCancel):
-            print("{}: skipping".format(prompt_prefix))
+            print("{}skipping".format(prompt_prefix))
             return
         elif isinstance(inp, TimestampCommand):
-            dt_inp = timestamp_input(input_prefix, confirm_prefix, prompt_prefix, last_dt)
+            dt_inp = timestamp_input(prompt_prefix, last_dt)
             if isinstance(dt_inp, datetime):
-                print("{}: using timestamp {} for current metric only".format(
+                print("{}using timestamp {} for current metric only".format(
                       prompt_prefix, dt_inp))
                 dt_custom = dt_inp
             elif isinstance(dt_inp, InputCancel):
-                print("{}: timestamp entry canceled".format(prompt_prefix))
+                print("{}timestamp entry canceled".format(prompt_prefix))
         elif isinstance(inp, SpecialValue):
             raise Exception("unexpected SpecialValue: " + str(inp))
         else:
@@ -414,7 +428,7 @@ def entry_file(path):
     ts = int(dt.replace(tzinfo=timezone.utc).timestamp())
     rows.append((ts, val))
     write_csv(path, rows)
-    print("{}: saved: time {}, value {}{}".format(prompt_prefix, dt, val, delta))
+    print("{}saved: time {}, value {}{}".format(prompt_prefix, dt, val, delta))
 
 def cmd_entry(args):
     """Enter data manually in an interactive session.
