@@ -275,34 +275,32 @@ def command_input(prompt):
         else:
             return inp
 
-def confirmed_input(prompt, confirm_prompt):
+def confirmed_input(input_prefix, confirm_prefix, print_prefix, typedesc, converter):
     """Read inputs until two subsequent inputs match, cancel on blank input.
 
     If user cancels input, return what optional_input returned.
     """
-    inp = command_input(prompt)
+    inp = validated_input(input_prefix, print_prefix, typedesc, converter)
     if isinstance(inp, SpecialValue):
         return inp
 
     prev = inp
     # keep collecting inputs until (a) two inputs match or (b) input is canceled
     while True:
-        cur = command_input(confirm_prompt)
+        cur = validated_input(confirm_prefix, print_prefix, typedesc, converter)
         if (cur == prev) or isinstance(cur, SpecialValue):
             return cur
         prev = cur
 
-def validated_input(prompt_prefix, typedesc, converter):
+def validated_input(prompt_prefix, print_prefix, typedesc, converter):
     while True:
         try:
-            inp = confirmed_input(
-                "{}: enter {} value: ".format(prompt_prefix, typedesc),
-                "{}: confirm {} value: ".format(prompt_prefix, typedesc))
+            inp = command_input("{}{} value: ".format(prompt_prefix, typedesc))
             if isinstance(inp, SpecialValue):
                 return inp
             return converter(inp)
         except ValueError as e:
-            print("{}: error: {}".format(prompt_prefix, str(e)))
+            print("{}: error: {}".format(print_prefix, str(e)))
 
 def int_converter(s):
     try:
@@ -340,13 +338,13 @@ def datetime_greater(other):
             raise ValueError("timestamp must be greater than " + str(other))
     return validator
 
-def timestamp_input(prompt_prefix, min_ts):
+def timestamp_input(input_prefix, confirm_prefix, print_prefix, min_ts):
     while True:
         converter = datetime_greater(min_ts) if min_ts else datetime_converter
-        inp = validated_input(prompt_prefix, "timestamp", converter)
+        inp = confirmed_input(input_prefix, confirm_prefix, print_prefix, "timestamp", converter)
         if isinstance(inp, Command):
             print("{}: error: commands are not allowed while entering"
-                  " timestamp".format(prompt_prefix))
+                  " timestamp".format(print_prefix))
         else:
             return inp
 
@@ -385,15 +383,17 @@ def entry_file(path):
     else:
         raise Exception("unexpected value type: " + str(valtype))
 
+    input_prefix = prompt_prefix + ": enter "
+    confirm_prefix = prompt_prefix + ": confirm "
     dt_custom = None
     while True: # main entry loop
-        inp = validated_input(prompt_prefix, typedesc, converter)
+        inp = confirmed_input(input_prefix, confirm_prefix, prompt_prefix, typedesc, converter)
         dt = dt_custom if dt_custom else datetime.utcnow().replace(microsecond=0)
         if isinstance(inp, InputCancel):
             print("{}: skipping".format(prompt_prefix))
             return
         elif isinstance(inp, TimestampCommand):
-            dt_inp = timestamp_input(prompt_prefix, last_dt)
+            dt_inp = timestamp_input(input_prefix, confirm_prefix, prompt_prefix, last_dt)
             if isinstance(dt_inp, datetime):
                 print("{}: using timestamp {} for current metric only".format(
                       prompt_prefix, dt_inp))
