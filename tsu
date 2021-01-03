@@ -344,18 +344,25 @@ def datetime_greater(other):
             raise ValueError("timestamp must be greater than " + str(other))
     return validator
 
-def make_input(prefix, prompt, converter):
+def make_validated_input(prefix, prompt, converter):
     base = partial(base_input, default_prompt=prefix + prompt)
     cancelable = partial(optional_input, base)
     command = partial(command_input, cancelable)
     validated = partial(validated_input, command, converter,
                         lambda s: print(prefix + s))
-    confirmed = partial(confirmed_input, validated, validated)
+    return validated
+
+def make_input(prefix, typedesc, converter):
+    initial_prompt = "enter {} value: ".format(typedesc)
+    confirm_prompt = "confirm {} value: ".format(typedesc)
+    confirmed = partial(confirmed_input,
+                        make_validated_input(prefix, initial_prompt, converter),
+                        make_validated_input(prefix, confirm_prompt, converter))
     return confirmed
 
 def timestamp_input(prefix, min_ts):
     converter = datetime_greater(min_ts) if min_ts else datetime_converter
-    input = make_input(prefix, "enter timestamp value: ", converter)
+    input = make_input(prefix, "timestamp", converter)
     while True:
         inp = input()
         if isinstance(inp, Command):
@@ -393,9 +400,9 @@ def entry_file(path):
             prompt_prefix, last_dt, last_val))
 
     if valtype == int:
-        input = make_input(prompt_prefix, "enter integer value: ", int_converter)
+        input = make_input(prompt_prefix, "integer", int_converter)
     elif valtype == str:
-        input = make_input(prompt_prefix, "enter string value: ", identity)
+        input = make_input(prompt_prefix, "string", identity)
     else:
         raise Exception("unexpected value type: " + str(valtype))
 
