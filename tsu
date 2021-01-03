@@ -298,7 +298,7 @@ def confirmed_input(input, confirm_input):
             return cur
         prev = cur
 
-def validated_input(input, converter, printer=print):
+def validated_input(input, converter, printer):
     while True:
         try:
             inp = input()
@@ -344,30 +344,27 @@ def datetime_greater(other):
             raise ValueError("timestamp must be greater than " + str(other))
     return validator
 
-def make_validated_input(prefix, prompt, converter):
-    base = partial(base_input, default_prompt=prefix + prompt)
+def make_validated_input(prompt, converter, printer):
+    base = partial(base_input, default_prompt=prompt)
     cancelable = partial(optional_input, base)
     command = partial(command_input, cancelable)
-    validated = partial(validated_input, command, converter,
-                        lambda s: print(prefix + s))
+    validated = partial(validated_input, command, converter, printer)
     return validated
 
-def make_input(prefix, typedesc, converter):
-    initial_prompt = "enter {} value: ".format(typedesc)
-    confirm_prompt = "confirm {} value: ".format(typedesc)
-    confirmed = partial(confirmed_input,
-                        make_validated_input(prefix, initial_prompt, converter),
-                        make_validated_input(prefix, confirm_prompt, converter))
-    return confirmed
+def make_input(prefix, typedesc, converter, printer):
+    initial_prompt = prefix + "enter {} value: ".format(typedesc)
+    confirm_prompt = prefix + "confirm {} value: ".format(typedesc)
+    return partial(confirmed_input,
+                   make_validated_input(initial_prompt, converter, printer),
+                   make_validated_input(confirm_prompt, converter, printer))
 
-def timestamp_input(prefix, min_ts):
+def timestamp_input(prefix, min_ts, printer):
     converter = datetime_greater(min_ts) if min_ts else datetime_converter
-    input = make_input(prefix, "timestamp", converter)
+    input = make_input(prefix, "timestamp", converter, printer)
     while True:
         inp = input()
         if isinstance(inp, Command):
-            print(prefix + "error: commands are not allowed while entering"
-                  " timestamp")
+            printer("error: commands are not allowed while entering timestamp")
         else:
             return inp
 
@@ -399,10 +396,12 @@ def entry_file(path):
         print("{}last record is: time {}, value {}".format(
             prompt_prefix, last_dt, last_val))
 
+    printer = lambda s: print(prompt_prefix + s)
+
     if valtype == int:
-        input = make_input(prompt_prefix, "integer", int_converter)
+        input = make_input(prompt_prefix, "integer", int_converter, printer)
     elif valtype == str:
-        input = make_input(prompt_prefix, "string", identity)
+        input = make_input(prompt_prefix, "string", identity, printer)
     else:
         raise Exception("unexpected value type: " + str(valtype))
 
@@ -414,7 +413,7 @@ def entry_file(path):
             print("{}skipping".format(prompt_prefix))
             return
         elif isinstance(inp, TimestampCommand):
-            dt_inp = timestamp_input(prompt_prefix, last_dt)
+            dt_inp = timestamp_input(prompt_prefix, last_dt, printer)
             if isinstance(dt_inp, datetime):
                 print("{}using timestamp {} for current metric only".format(
                       prompt_prefix, dt_inp))
