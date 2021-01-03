@@ -266,15 +266,14 @@ class TimestampCommand(Command):
     pass
 
 def command_input(prompt, input):
-    while True:
-        inp = input(prompt)
-        if isinstance(inp, str) and inp.startswith(":"):
-            if inp == ":t":
-                return TimestampCommand()
-            else:
-                raise ValueError("unknown command '{}'".format(inp))
+    inp = input(prompt)
+    if isinstance(inp, str) and inp.startswith(":"):
+        if inp == ":t":
+            return TimestampCommand()
         else:
-            return inp
+            raise ValueError("unknown command '{}'".format(inp))
+    else:
+        return inp
 
 
 def confirmed_input(prompt, confirm_prompt, input):
