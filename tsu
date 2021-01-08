@@ -107,6 +107,31 @@ def cmd_view(args):
     # try to handle the file regardless of its type
     validate(args.file, view=True)
 
+def cmd_latest(args):
+    accfiles = load_list(args.acclist)
+    if not accfiles:
+        return
+    accfmt = "{:20}|{:24}|{:24}"
+    headerfmt = accfmt + "|{:20}|{:7}"
+    print(headerfmt.format("platform", "account", "metric", "date", "value"))
+    print("{:-<20}|{:-<24}|{:-<24}|{:-<20}|{:-<7}".format("", "", "", "", ""))
+    for accfile in accfiles:
+        if not os.path.isfile(accfile):
+            print("WARN: not a file: " + accfile)
+            continue
+        rows = list(csv_iter(accfile))
+        if len(rows) < 1:
+            print("WARN: no data: " + accfile)
+            continue
+        valtype = value_type(accfile)
+        last_dt, last_val = parse(rows[-1], valtype)
+        attrs = metric_attrs(accfile)
+        if attrs:
+            accstr = accfmt.format(*attrs)
+        else:
+            accstr = "{:68}".format(accfile)
+        print("{}|{:20}|{:>7,}".format(accstr, str(last_dt), last_val))
+
 def cmd_validate(args):
     path = args.path
     if os.path.isfile(path):
@@ -479,6 +504,14 @@ def make_arg_parser():
         "file",
         help="file to view")
     view.set_defaults(func=cmd_view)
+
+    latest = subparsers.add_parser(
+        "latest",
+        help="print latest stats for accounts listed in a given file")
+    latest.add_argument(
+        "acclist",
+        help="path to file holding a list of accounts, one per line")
+    latest.set_defaults(func=cmd_latest)
 
     export = subparsers.add_parser(
         "export",
