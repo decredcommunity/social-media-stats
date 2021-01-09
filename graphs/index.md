@@ -1,6 +1,6 @@
 # Graphs of available social media data
 
-The graphs below use data from 2020-10-02 (master commit [dd882c2](https://github.com/xaur/social-media-data/commit/dd882c25fb187852f96eaabd93206c266d36e69c)).
+The graphs below are built from snapshots made 2021-01-02 (`data` branch commit [82a0a2a](https://github.com/xaur/social-media-data/commit/82a0a2a0ea1bf5643a10dd8cd9e23c522d1f3625)).
 
 ![](twitter-decredproject.png)
 
