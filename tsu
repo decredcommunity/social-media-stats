@@ -132,6 +132,21 @@ def cmd_latest(args):
             accstr = "{:68}".format(accfile)
         print("{}|{:20}|{:>7,}".format(accstr, str(last_dt), last_val))
 
+def cmd_list_accounts(args):
+    path = Config.data_dir
+    accs = []
+
+    for curdir, dirs, files in os.walk(path):
+        for fname in files:
+            # if the directory contains the profile file, it is an account
+            if fname == Config.profile_filename:
+                accs.append(curdir)
+                break
+
+    accs.sort()
+    for acc in accs:
+        print(acc)
+
 def cmd_validate(args):
     path = args.path
     if os.path.isfile(path):
@@ -487,6 +502,11 @@ def make_arg_parser():
         description=("time series utility. The following file types are"
                      "supported: " + ", ".join(Const.int_exts + Const.str_exts)))
     subparsers = parser.add_subparsers(dest="command", title="commands")
+
+    listaccs = subparsers.add_parser(
+        "listaccs", aliases=["la"],
+        help="list accounts in the data directory")
+    listaccs.set_defaults(func=cmd_list_accounts)
 
     validate = subparsers.add_parser(
         "validate", aliases=["val"],
