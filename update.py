@@ -20,5 +20,7 @@ def update_subrepo(url, branch, path):
 
 REPO = "https://github.com/decredcommunity/social-media-stats.git"
 
+print("Updating root repo")
+call(["git", "pull", "--ff-only"])
 update_subrepo(REPO, "data", "data")
 update_subrepo(REPO, "graphs", "graphs")
