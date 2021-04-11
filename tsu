@@ -416,7 +416,7 @@ def entry_file(path):
     printer = lambda s: print(prompt_prefix + s)
 
     hint = make_hint(dirpath, filename)
-    printer("capture the value for" + hint)
+    printer("capture the value for " + hint)
 
     valtype = value_type(filename)
     rows = list(csv_iter(path)) # read all to get the length
