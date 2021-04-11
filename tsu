@@ -258,7 +258,7 @@ def replace_url(url):
     # replace some URLs for easier data point collection
     pu = urlparse(url)
     if pu.netloc == "twitter.com":
-        newpu = pu._replace(netloc="nitter.net")
+        newpu = pu._replace(netloc="nitter.eu")
         newurl = urlunparse(newpu)
         return newurl
     return url
