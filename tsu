@@ -463,6 +463,19 @@ def entry_file(path):
     write_csv(path, rows)
     printer("saved: time {}, value {}{}".format(dt, val, delta))
 
+
+def entry_path(path):
+    if os.path.isfile(path):
+        # try to handle the requested file regardless of its type
+        entry_file(path)
+    elif os.path.isdir(path):
+        for curdir, dirs, files in os.walk(path):
+            for fname in files:
+                # only prompt entry for int values
+                if value_type(fname) == int:
+                    entry_file(os.path.join(curdir, fname))
+
+
 def cmd_entry(args):
     """Enter data manually in an interactive session.
 
@@ -484,16 +497,13 @@ def cmd_entry(args):
     print("Interactive data entry mode. Make sure your system clock is accurate.")
     print("Your system UTC time is:",
           format(datetime.utcfromtimestamp(int(time.time()))))
-    path = args.path
-    if os.path.isfile(path):
-        # try to handle the file regardless of its type
-        entry_file(path)
-    elif os.path.isdir(path):
-        for curdir, dirs, files in os.walk(path):
-            for fname in files:
-                # only prompt entry for int values
-                if value_type(fname) == int:
-                    entry_file(os.path.join(curdir, fname))
+    pathlist = args.pathlist
+    if pathlist:
+        for path in load_list(pathlist):
+            entry_path(path)
+    else:
+        entry_path(args.path)
+
 
 def make_arg_parser():
     import argparse
@@ -563,6 +573,9 @@ def make_arg_parser():
         help="file or directory path to enter data in; if directory, the"
              " program will prompt data entry for each time sieries file found"
              " in it")
+    entry.add_argument(
+        "-p", "--pathlist",
+        help="list of paths to enter data in, one per line")
     entry.set_defaults(func=cmd_entry)
 
     return parser
