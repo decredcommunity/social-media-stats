@@ -1,4 +1,6 @@
-data/data/discord
+data/data/coingecko.com/decred
+data/data/coinmarketcap.com/decred
+data/data/discord/decred
 data/data/facebook.com/Decred-Arabia
 data/data/facebook.com/DecredChinese
 data/data/facebook.com/DecredESP
@@ -7,7 +9,10 @@ data/data/facebook.com/decredau
 data/data/facebook.com/decredbrasil
 data/data/facebook.com/decredinternational
 data/data/facebook.com/decredproject
+data/data/github.com/btcsuite/btcd
+data/data/github.com/btcsuite/btcwallet
 data/data/github.com/decred/dcrd
+data/data/github.com/decred/dcrwallet
 data/data/instagram.com
 data/data/linkedin.com
 data/data/matrix
@@ -17,6 +22,7 @@ data/data/reddit.com/decred
 data/data/slack.com
 data/data/t.me
 data/data/twitter.com/BlockCommons
+data/data/twitter.com/ConsensusRough
 data/data/twitter.com/DecredArabia
 data/data/twitter.com/DecredAustralia
 data/data/twitter.com/Decred_BR
