@@ -5,11 +5,9 @@ from subprocess import call
 
 def update_subrepo(url, branch, path):
     if isdir(path):
-        gitpath = join(path, ".git")
-        if isdir(gitpath):
+        if isdir(path):
             print("Updating subrepository:", path)
-            call(["git", "--git-dir", gitpath, "--work-tree", path,
-                  "pull", "--ff-only"])
+            call(["git", "-C", path, "pull", "--ff-only"])
         else:
             print("Unexpected state: dir '{}' exists but does not contain"
                   " .git dir".format(path))
