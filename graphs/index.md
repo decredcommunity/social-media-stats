@@ -1,20 +1,18 @@
 Graphs of available social media data
 
-The graphs below are built from snapshots made 2021-01-02 (`data` branch commit [82a0a2a](https://github.com/xaur/social-media-data/commit/82a0a2a0ea1bf5643a10dd8cd9e23c522d1f3625)).
+The graphs below are built from snapshots up until 2021-05-27 (`data` branch commit [c080671](https://github.com/xaur/social-media-data/commit/c080671b1a3bbead60f011c2438b93399505ff6d)).
 
 ![](twitter-decredproject.png)
 
 ![](twitter-regional.png)
 
-![](twitter-other.png)
+![](twitter-specialized.png)
 
 Notes:
 
 - Twitter has periodic purges of fake followers.
 
 ![](facebook.png)
-
-
 
 ![](youtube-decredchannel.png)
 
@@ -44,7 +42,7 @@ Notes:
 
 - The sharp drop of user count in early 2020 is due to the purge of inactive users.
 
-![](telegram-Decred.png)
+![](telegram-decred.png)
 
 ![](telegram-regional.png)
 
@@ -53,8 +51,6 @@ Notes:
 Notes:
 
 - (Some of the) steady decrease in Telegram user counts is likely due to bots and fake users being gradually removed.
-
-
 
 ![](matrix.png)
 
