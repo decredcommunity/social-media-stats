@@ -65,6 +65,5 @@ Notes:
 Notes:
 
 - The drops of Matrix users correspond to purging of 56 old bots in June 2020 and the upgrade of the #general room in early July 2020 (room upgrade means a new room is created and all users from the old room are invited but have to manually accept to join).
-- The back and forth of the Politeia user count is due to the non-trivial processing of the [raw data](https://github.com/decred-proposals/mainnet). The small number of data points after late 2019 is due to changing data format which we have not adapted to yet. Technically it must be possible to reconstruct a ton of data points from the raw data.
 - Slack was shut down in early 2020.
 
