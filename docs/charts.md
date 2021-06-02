@@ -1,15 +1,15 @@
-# Decred Social Media Charts
+# Decred social media charts
 
-Data source: `data` branch commit [c080671](https://github.com/decredcommunity/social-media-stats/tree/c080671b1a3bbead60f011c2438b93399505ff6d) of 2021-05-27.
+Source of data: [social-media-stats](https://github.com/decredcommunity/social-media-stats) repository, branch `data`, commit [c080671](https://github.com/decredcommunity/social-media-stats/tree/c080671b1a3bbead60f011c2438b93399505ff6d) of 2021-05-27.
 
-Pay attention to the `value` axis on the left to have a more accurate interpretation of the lines.
+Pay attention to the `value` axis on the left to have a more accurate interpretation of the charts.
 
 ![](https://github.com/decredcommunity/social-media-stats/blob/graphs/graphs/twitter-decredproject.png)
 
 Notes:
 
 - Twitter has periodic mass purges of fake followers, as well as ongoing cleanup.
-- We don't have a good explanation of the quick jump to ~41,600 followers in October 2018, followed by a quick drop back to ~40,000. Around that time Politeia was released and Decred made a couple of appearances on CoinDesk (getting an article on CoinDesk has been a rare event historically).
+- We don't have a good explanation of the quick jump to ~41,600 followers in October 2018, followed by a quick drop back to ~40,000. Decred had some big news around that time: Politeia was released and Decred got a couple of articles on CoinDesk (a rare event historically).
 
 ![](https://github.com/decredcommunity/social-media-stats/blob/graphs/graphs/twitter-regional.png)
 
@@ -33,19 +33,20 @@ Notes:
 
 Notes:
 
-- `online` users is not too meaningful with the current amount of data points, because the count of people online on Reddit greatly varies by the time of day.
+- `online` users chart is not too meaningful with the current amount of data points, because the count of people online on Reddit greatly varies by the time of day.
 
 ![](https://github.com/decredcommunity/social-media-stats/blob/graphs/graphs/matrix.png)
 
 Notes:
 
-- The 2020 drop of Matrix users was due to purging of 56 old bots in June 2020, followed by the upgrade of room versions in early July 2020. Room upgrade means a new room is created and all users from the old room are automatically invited but have to manually accept to join. Room upgrade has a similar effect to purging inactive users.
+- The 2020 drop of Matrix users was due to purging of 56 old bots in June 2020, followed by the upgrade of room versions in early July 2020. Room upgrade means a new room is created and all users from the old one are automatically invited, but they have to manually accept to join the new version. Room upgrade has a similar effect to purging inactive users.
 
 ![](https://github.com/decredcommunity/social-media-stats/blob/graphs/graphs/discord.png)
 
 Notes:
 
-- The drop of user count in early 2020 was due to the purge of inactive users.
+- The drops of user counts were due to purges of inactive users.
+- `verified-to-post` tracked the active users who passed the manual verification (e.g. answer a few simple questions) to gain the permission to post. This number became hard to obtain at some point.
 
 ![](https://github.com/decredcommunity/social-media-stats/blob/graphs/graphs/telegram-decred.png)
 
@@ -62,7 +63,7 @@ Notes:
 
 ![](https://github.com/decredcommunity/social-media-stats/blob/graphs/graphs/github-wallets.png)
 
-- [btcsuite](https://github.com/btcsuite) is tracked here because it played a big role in bootstrapping Decred, and it was made by mostly the same people.
+- [btcsuite](https://github.com/btcsuite) is tracked here because it played a big role in bootstrapping Decred, and it was built by mostly the same people.
 - Before May 2020 [dcrd](https://github.com/decred/dcrd) was a fork of [btcd](https://github.com/btcsuite/btcd) and they shared the same count of `forks`. On May 2020 dcrd was changed to a standalone repository and the fork count was split to 1,285 for btcd and 235 for dcrd. The same happened for btcwallet and dcrwallet repos. The `stars` and `watchers` counts are independent and were not affected. See Decred Journal [April 2020](https://xaur.github.io/decred-news/journal/202004#development) for the motivation to break the fork relationship.
 
 ![](https://github.com/decredcommunity/social-media-stats/blob/graphs/graphs/facebook.png)
