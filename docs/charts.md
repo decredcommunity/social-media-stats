@@ -20,6 +20,8 @@ Notes:
 
 ![](https://github.com/decredcommunity/social-media-stats/blob/graphs/graphs/medium.png)
 
+![](https://github.com/decredcommunity/social-media-stats/blob/graphs/graphs/crypto-indices.png)
+
 ![](https://github.com/decredcommunity/social-media-stats/blob/graphs/graphs/reddit.png)
 
 ![](https://github.com/decredcommunity/social-media-stats/blob/graphs/graphs/matrix.png)
