@@ -83,12 +83,22 @@ def print_entry(dt, val, valtype):
     else:
         print(dt, val)
 
-def validate(path, view=False):
+def validate(path, view=False, limit=None):
     valtype = value_type(path)
     prev_dt = datetime.min
+    all_rows = list(csv_iter(path))
+    first = 0
+    rows = all_rows
+    if limit is not None:
+        try:
+            int_limit = int(limit)
+        except ValueError as e:
+            raise TsuError("limit is not an integer: '{}'".format(limit)) from e
+        first = max(len(all_rows) - int_limit, 0)
+        rows = all_rows[first:]
 
     # start counting from 1 to match file line number
-    for line_num, row in enumerate(csv_iter(path), start=1):
+    for line_num, row in enumerate(rows, start=first + 1):
         try:
             dt, val = parse(row, valtype)
             if dt <= prev_dt:
@@ -105,7 +115,7 @@ def cmd_view(args):
     if not os.path.isfile(path):
         raise TsuError("path is not a file: " + path)
     # try to handle the file regardless of its type
-    validate(args.file, view=True)
+    validate(args.file, view=True, limit=args.limit)
 
 def cmd_latest(args):
     accfiles = load_list(args.acclist)
@@ -533,6 +543,9 @@ def make_arg_parser():
     view.add_argument(
         "file",
         help="file to view")
+    view.add_argument(
+        "-l", "--limit",
+        help="max number of records to output")
     view.set_defaults(func=cmd_view)
 
     latest = subparsers.add_parser(
