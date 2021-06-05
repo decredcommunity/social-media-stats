@@ -110,12 +110,26 @@ def validate(path, view=False, limit=None):
         except ValidationError as e:
             print("err {}:{}: {}".format(path, line_num, e))
 
+def series_paths_sorted(root):
+    if not os.path.isdir(root):
+        raise TsuError("path is not a directory: " + root)
+    paths = []
+    for curdir, dirs, files in os.walk(root):
+        for fname in files:
+            # only collect files of known type
+            if value_type(fname) is not None:
+                paths.append(os.path.join(curdir, fname))
+    return sorted(paths)
+
 def cmd_view(args):
-    path = args.file
-    if not os.path.isfile(path):
-        raise TsuError("path is not a file: " + path)
-    # try to handle the file regardless of its type
-    validate(args.file, view=True, limit=args.limit)
+    path = args.path
+    if os.path.isfile(path):
+        # try to handle the file regardless of its type
+        validate(path, view=True, limit=args.limit)
+    elif os.path.isdir(path):
+        for p in series_paths_sorted(path):
+            print("----", p)
+            validate(p, view=True, limit=args.limit)
 
 def cmd_latest(args):
     accfiles = load_list(args.acclist)
@@ -539,13 +553,13 @@ def make_arg_parser():
 
     view = subparsers.add_parser(
         "view", aliases=["v"],
-        help="view time series file")
+        help="view one or more time series files")
     view.add_argument(
-        "file",
-        help="file to view")
+        "path",
+        help="path to view")
     view.add_argument(
         "-l", "--limit",
-        help="max number of records to output")
+        help="max number of records to output for each file")
     view.set_defaults(func=cmd_view)
 
     latest = subparsers.add_parser(
