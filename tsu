@@ -165,18 +165,14 @@ def cmd_latest(args):
 
 def cmd_list_accounts(args):
     path = Config.data_dir
-    accs = []
 
-    for curdir, dirs, files in os.walk(path):
-        for fname in files:
-            # if the directory contains the profile file, it is an account
-            if fname == Config.profile_filename:
-                accs.append(curdir)
-                break
+    # if the directory contains the profile descriptor, it is an account
+    profile_files = file_paths_sorted(
+        path, lambda fname: fname == Config.profile_filename)
+    acc_dirs = list(map(os.path.dirname, profile_files))
 
-    accs.sort()
-    for acc in accs:
-        print(acc)
+    for ad in acc_dirs:
+        print(ad)
 
 def cmd_validate(args):
     path = args.path
