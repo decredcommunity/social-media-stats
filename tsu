@@ -110,16 +110,23 @@ def validate(path, view=False, limit=None):
         except ValidationError as e:
             print("err {}:{}: {}".format(path, line_num, e))
 
-def series_paths_sorted(root):
+def file_paths_sorted(root, pred):
     if not os.path.isdir(root):
-        raise TsuError("path is not a directory: " + root)
+        raise TsuError("root path is not a directory: " + root)
     paths = []
     for curdir, dirs, files in os.walk(root):
         for fname in files:
-            # only collect files of known type
-            if value_type(fname) is not None:
+            if pred(fname):
                 paths.append(os.path.join(curdir, fname))
     return sorted(paths)
+
+def series_paths_sorted(root):
+    # files of known type
+    return file_paths_sorted(root, lambda fname: value_type(fname) is not None)
+
+def int_paths_sorted(root):
+    # files with int values
+    return file_paths_sorted(root, lambda fname: value_type(fname) == int)
 
 def cmd_view(args):
     path = args.path
@@ -177,11 +184,8 @@ def cmd_validate(args):
         # try to handle the file regardless of its type
         validate(path)
     elif os.path.isdir(path):
-        for curdir, dirs, files in os.walk(path):
-            for fname in files:
-                # only validate files of known type
-                if value_type(fname) is not None:
-                    validate(os.path.join(curdir, fname))
+        for p in series_paths_sorted(path):
+            validate(p)
 
 def load_list(path):
     with open(path) as f:
@@ -251,14 +255,10 @@ def export_csv(path, outname, graph_only):
             print("exporting paths:", path)
             export_paths = [path]
         for ep in export_paths:
-            for curdir, dirs, files in os.walk(ep):
-                for fname in files:
-                    # only export files with int values
-                    if value_type(fname) == int:
-                        fpath = os.path.join(curdir, fname)
-                        # set `graph` column to True if the file is whitelisted
-                        graph = any(map(fpath.startswith, graph_paths))
-                        export_append_rows(rows, fpath, graph)
+            for fpath in int_paths_sorted(ep):
+                # set `graph` column to True if the file is whitelisted
+                graph = any(map(fpath.startswith, graph_paths))
+                export_append_rows(rows, fpath, graph)
 
     # sort by timestamp, in-place
     rows.sort()
@@ -493,11 +493,8 @@ def entry_path(path):
         # try to handle the requested file regardless of its type
         entry_file(path)
     elif os.path.isdir(path):
-        for curdir, dirs, files in os.walk(path):
-            for fname in files:
-                # only prompt entry for int values
-                if value_type(fname) == int:
-                    entry_file(os.path.join(curdir, fname))
+        for p in int_paths_sorted(path):
+            entry_file(p)
 
 
 def cmd_entry(args):
