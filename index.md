@@ -12,6 +12,8 @@ Metrics for the most important accounts tracked by this project are visualized o
 
 Experimental sub-project comparing monthly snapshots and reporting any activity that stands out.
 
+- [Decred SM metrics 2021-06](posts/20210711.1.md)
+
 - [Decred SM metrics 2021-05](posts/20210604.1.md)
 
 - [Decred SM metrics 2021-04](posts/20210506.1.md)
