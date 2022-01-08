@@ -31,33 +31,45 @@ class TsuError(Exception):
 class ValidationError(TsuError):
     pass
 
-def parse(entry, valtype):
-    if len(entry) != 2:
-        raise ValidationError(
-            "entry must have exactly 2 fields: " + str(entry))
-    s1, s2 = entry
+def parse_timestamp(s):
     try:
-        tsi = int(s1)
+        tsi = int(s)
     except ValueError as e:
         raise ValidationError(
-            "timestamp is not an integer: '{}'".format(s1)) from e
+            "timestamp is not an integer: '{}'".format(s)) from e
     try:
         dt = datetime.utcfromtimestamp(tsi)
     except Exception as e:
         raise ValidationError(
             "cannot parse datetime from timestamp: '{}'".format(tsi)) from e
+    return dt
+
+def parse_int(s):
+    try:
+        return int(s)
+    except ValueError as e:
+        raise ValidationError(
+            "value is not an integer: '{}'".format(s)) from e
+
+def parse_float(s):
+    try:
+        return float(s)
+    except ValueError as e:
+        raise ValidationError(
+            "value is not a float: '{}'".format(s)) from e
+
+def parse_record(rec, valtype):
+    if len(rec) != 2:
+        raise ValidationError(
+            "record must have exactly 2 fields: " + str(rec))
+    s1, s2 = rec
+
+    dt = parse_timestamp(s1)
+
     if valtype == int:
-        try:
-            val = int(s2)
-        except ValueError as e:
-            raise ValidationError(
-                "value is not an integer: '{}'".format(s2)) from e
+        val = parse_int(s2)
     elif valtype == float:
-        try:
-            val = float(s2)
-        except ValueError as e:
-            raise ValidationError(
-                "value is not a float: '{}'".format(s2)) from e
+        val = parse_float(s2)
     else:
         if len(s2) > 0:
             val = s2
@@ -87,7 +99,7 @@ def write_csv(filename, rows):
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
         writer.writerows(rows)
 
-def print_entry(dt, val, valtype):
+def print_record(dt, val, valtype):
     if valtype == int:
         print(dt, "{:>6,}".format(val))
     else:
@@ -110,13 +122,13 @@ def validate(path, view=False, limit=None):
     # start counting from 1 to match file line number
     for line_num, row in enumerate(rows, start=first + 1):
         try:
-            dt, val = parse(row, valtype)
+            dt, val = parse_record(row, valtype)
             if dt <= prev_dt:
                 raise ValidationError(
                     "timestamp '{}' must be greater than '{}'".format(dt, prev_dt))
             prev_dt = dt
             if view:
-                print_entry(dt, val, valtype)
+                print_record(dt, val, valtype)
         except ValidationError as e:
             print("err {}:{}: {}".format(path, line_num, e))
 
@@ -165,7 +177,7 @@ def cmd_latest(args):
             print("WARN: no data: " + accfile)
             continue
         valtype = value_type(accfile)
-        last_dt, last_val = parse(rows[-1], valtype)
+        last_dt, last_val = parse_record(rows[-1], valtype)
         attrs = metric_attrs(accfile)
         if attrs:
             accstr = accfmt.format(*attrs)
@@ -370,27 +382,19 @@ def validated_input(prompt, converter, printer, input):
             if isinstance(inp, SpecialValue):
                 return inp
             return converter(inp)
-        except ValueError as e:
+        except ValidationError as e:
             printer("error: {}".format(str(e)))
-
-def int_converter(s):
-    try:
-        return int(s)
-    except ValueError as e:
-        raise ValueError("expected an integer but got: " + s)
-
-def float_converter(s):
-    try:
-        return float(s)
-    except ValueError as e:
-        raise ValueError("expected a float but got: " + s)
 
 def parse_date(date_string, format):
     # extend datetime.strptime formats with %s from the `date` program
     if format == "%s":
-        return datetime.utcfromtimestamp(int(date_string))
+        return parse_timestamp(date_string)
     else:
-        return datetime.strptime(date_string, format)
+        try:
+            return datetime.strptime(date_string, format)
+        except ValueError as e:
+            raise ValidationError(
+                "cannot parse datetime from: '{}'".format(date_string)) from e
 
 def datetime_converter(s):
     dt = None
@@ -398,11 +402,11 @@ def datetime_converter(s):
         try:
             dt = parse_date(s, f)
             break
-        except ValueError:
+        except ValidationError:
             pass
 
     if not dt:
-        raise ValueError("unrecognized date value: " + s)
+        raise ValidationError("unrecognized date value: " + s)
 
     return dt
 
@@ -412,7 +416,7 @@ def datetime_greater(other):
         if dt > other:
             return dt
         else:
-            raise ValueError("timestamp must be greater than " + str(other))
+            raise ValidationError("timestamp must be greater than " + str(other))
     return validator
 
 def make_input(prefix, typedesc, converter, printer):
@@ -458,14 +462,14 @@ def entry_file(path):
     rows = list(csv_iter(path)) # read all to get the length
     last_dt, last_val = None, None
     if len(rows) > 0:
-        last_dt, last_val = parse(rows[-1], valtype)
+        last_dt, last_val = parse_record(rows[-1], valtype)
         # extra output for a sanity check
         printer("last record is: time {}, value {}".format(last_dt, last_val))
 
     if valtype == int:
-        input = make_input(prompt_prefix, "integer", int_converter, printer)
+        input = make_input(prompt_prefix, "integer", parse_int, printer)
     elif valtype == float:
-        input = make_input(prompt_prefix, "float", float_converter, printer)
+        input = make_input(prompt_prefix, "float", parse_float, printer)
     elif valtype == str:
         input = make_input(prompt_prefix, "string", identity, printer)
     else:
@@ -610,7 +614,7 @@ def make_arg_parser():
         "path", nargs="?",
         default=Config.data_dir,
         help="file or directory path to enter data in; if directory, the"
-             " program will prompt data entry for each time sieries file found"
+             " program will prompt data entry for each time series file found"
              " in it")
     entry.add_argument(
         "-p", "--pathlist",
