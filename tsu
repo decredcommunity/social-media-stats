@@ -11,11 +11,13 @@ from itertools import chain
 from urllib.parse import urlparse, urlunparse
 import time
 
+
 class Config:
     data_dir            = "data/data"
     export_filename     = "export.csv"
     profile_filename    = "profile.json"
     graph_list_file     = "graph.list"
+
 
 class Const:
     int_exts            = (".csv", ".tsi")
@@ -23,13 +25,16 @@ class Const:
     str_exts            = (".tss", )
     num_types           = [int, float]
 
+
 # Define and catch our own exception to avoid intercepting language and library
 # exceptions.
 class TsuError(Exception):
     pass
 
+
 class ValidationError(TsuError):
     pass
+
 
 def parse_timestamp(s):
     try:
@@ -44,6 +49,7 @@ def parse_timestamp(s):
             "cannot parse datetime from timestamp: '{}'".format(tsi)) from e
     return dt
 
+
 def parse_int(s):
     try:
         return int(s)
@@ -51,12 +57,14 @@ def parse_int(s):
         raise ValidationError(
             "value is not an integer: '{}'".format(s)) from e
 
+
 def parse_float(s):
     try:
         return float(s)
     except ValueError as e:
         raise ValidationError(
             "value is not a float: '{}'".format(s)) from e
+
 
 def parse_record(rec, valtype):
     if len(rec) != 2:
@@ -77,6 +85,7 @@ def parse_record(rec, valtype):
             raise ValidationError("value is empty")
     return dt, val
 
+
 def value_type(path):
     ext = os.path.splitext(path)[1]
     if ext in Const.int_exts:
@@ -88,10 +97,12 @@ def value_type(path):
     else:
         return None
 
+
 def csv_iter(filename):
     """Generator yielding rows of the csv file."""
     with open(filename, newline="") as f:
         yield from csv.reader(f)
+
 
 def write_csv(filename, rows):
     # overwrite existing file
@@ -99,11 +110,13 @@ def write_csv(filename, rows):
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
         writer.writerows(rows)
 
+
 def print_record(dt, val, valtype):
     if valtype == int:
         print(dt, "{:>6,}".format(val))
     else:
         print(dt, val)
+
 
 def validate(path, view=False, limit=None):
     valtype = value_type(path)
@@ -132,6 +145,7 @@ def validate(path, view=False, limit=None):
         except ValidationError as e:
             print("err {}:{}: {}".format(path, line_num, e))
 
+
 def file_paths_sorted(root, pred):
     if not os.path.isdir(root):
         raise TsuError("root path is not a directory: " + root)
@@ -142,13 +156,16 @@ def file_paths_sorted(root, pred):
                 paths.append(os.path.join(curdir, fname))
     return sorted(paths)
 
+
 def series_paths_sorted(root):
     # files of known type
     return file_paths_sorted(root, lambda fname: value_type(fname) is not None)
 
+
 def num_paths_sorted(root):
     # files with numeric values
     return file_paths_sorted(root, lambda fname: value_type(fname) in Const.num_types)
+
 
 def cmd_view(args):
     path = args.path
@@ -159,6 +176,7 @@ def cmd_view(args):
         for p in series_paths_sorted(path):
             print("----", p)
             validate(p, view=True, limit=args.limit)
+
 
 def cmd_latest(args):
     accfiles = load_list(args.acclist)
@@ -185,6 +203,7 @@ def cmd_latest(args):
             accstr = "{:68}".format(accfile)
         print("{}|{:20}|{:>7,}".format(accstr, str(last_dt), last_val))
 
+
 def cmd_list_accounts(args):
     path = Config.data_dir
 
@@ -196,6 +215,7 @@ def cmd_list_accounts(args):
     for ad in acc_dirs:
         print(ad)
 
+
 def cmd_validate(args):
     path = args.path
     if os.path.isfile(path):
@@ -205,9 +225,11 @@ def cmd_validate(args):
         for p in series_paths_sorted(path):
             validate(p)
 
+
 def load_list(path):
     with open(path) as f:
         return [line.rstrip("\n") for line in f]
+
 
 def strip_prefix(s, p):
     if s.startswith(p):
@@ -215,12 +237,14 @@ def strip_prefix(s, p):
     else:
         return s
 
+
 def load_profile(dirpath):
     ppath = os.path.join(dirpath, Config.profile_filename)
     if os.path.exists(ppath):
         return load_json(ppath)
     else:
         return None
+
 
 def metric_attrs(path):
     prefix = Config.data_dir + os.sep
@@ -240,6 +264,7 @@ def metric_attrs(path):
     metric = os.path.splitext(metric_ext)[0]
     return platform, account_str, metric
 
+
 def export_append_rows(rows, fpath, graph):
     attrs = metric_attrs(fpath)
     if not attrs:
@@ -254,6 +279,7 @@ def export_append_rows(rows, fpath, graph):
         tags = " ".join(profile["tags"])
     for ts, val in csv_iter(fpath):
         rows.append((ts, platform, account, metric, val, graph_int, tags))
+
 
 def export_csv(path, outname, graph_only):
     rows = []
@@ -289,12 +315,15 @@ def export_csv(path, outname, graph_only):
     write_csv(outname, chain([header], rows))
     print("file saved:", outname)
 
+
 def cmd_export_csv(args):
     export_csv(args.path, args.output, args.graph_only)
+
 
 def load_json(path):
     with open(path) as f:
         return json.load(f)
+
 
 def replace_url(url):
     # replace some URLs for easier data point collection
@@ -304,6 +333,7 @@ def replace_url(url):
         newurl = urlunparse(newpu)
         return newurl
     return url
+
 
 def make_hint(dirpath, default_hint):
     profile = load_profile(dirpath)
@@ -318,11 +348,14 @@ def make_hint(dirpath, default_hint):
 
     return hint if hint else default_hint
 
+
 class SpecialValue:
     pass
 
+
 class InputCancel(SpecialValue):
     pass
+
 
 def optional_input(prompt, input):
     """Read a string, cancel if blank line entered twice.
@@ -341,11 +374,14 @@ def optional_input(prompt, input):
         print("(got EOF)")
         return InputCancel()
 
+
 class Command(SpecialValue):
     pass
 
+
 class TimestampCommand(Command):
     pass
+
 
 def command_input(prompt, input):
     inp = input(prompt)
@@ -375,6 +411,7 @@ def confirmed_input(prompt, confirm_prompt, input):
             return cur
         prev = cur
 
+
 def validated_input(prompt, converter, printer, input):
     while True:
         try:
@@ -384,6 +421,7 @@ def validated_input(prompt, converter, printer, input):
             return converter(inp)
         except ValidationError as e:
             printer("error: {}".format(str(e)))
+
 
 def parse_date(date_string, format):
     # extend datetime.strptime formats with %s from the `date` program
@@ -395,6 +433,7 @@ def parse_date(date_string, format):
         except ValueError as e:
             raise ValidationError(
                 "cannot parse datetime from: '{}'".format(date_string)) from e
+
 
 def datetime_converter(s):
     dt = None
@@ -410,6 +449,7 @@ def datetime_converter(s):
 
     return dt
 
+
 def datetime_greater(other):
     def validator(s):
         dt = datetime_converter(s)
@@ -419,6 +459,7 @@ def datetime_greater(other):
             raise ValidationError("timestamp must be greater than " + str(other))
     return validator
 
+
 def make_input(prefix, typedesc, converter, printer):
     cancelable = partial(optional_input, input=input)
     command = partial(command_input, input=cancelable)
@@ -427,6 +468,7 @@ def make_input(prefix, typedesc, converter, printer):
     initial_prompt = prefix + "enter {} value: ".format(typedesc)
     confirm_prompt = prefix + "confirm {} value: ".format(typedesc)
     return partial(confirmed_input, initial_prompt, confirm_prompt, validated)
+
 
 def timestamp_input(prefix, min_ts, printer):
     converter = datetime_greater(min_ts) if min_ts else datetime_converter
@@ -438,8 +480,10 @@ def timestamp_input(prefix, min_ts, printer):
         else:
             return inp
 
+
 def identity(x):
     return x
+
 
 def make_prompt_prefix(path):
     attrs = metric_attrs(path)
@@ -448,6 +492,7 @@ def make_prompt_prefix(path):
         return "n/a"
     _, account, metric = attrs
     return account + "/" + metric
+
 
 def entry_file(path):
     dirpath, filename = os.path.split(path)
@@ -623,6 +668,7 @@ def make_arg_parser():
 
     return parser
 
+
 def main():
     parser = make_arg_parser()
     args = parser.parse_args()
@@ -640,6 +686,7 @@ def main():
             pass
     else:
         parser.print_usage()
+
 
 if __name__ == "__main__":
     main()
