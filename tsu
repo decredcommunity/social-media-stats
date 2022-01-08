@@ -19,7 +19,9 @@ class Config:
 
 class Const:
     int_exts            = (".csv", ".tsi")
+    float_exts          = (".tsf", )
     str_exts            = (".tss", )
+    num_types           = [int, float]
 
 # Define and catch our own exception to avoid intercepting language and library
 # exceptions.
@@ -50,6 +52,12 @@ def parse(entry, valtype):
         except ValueError as e:
             raise ValidationError(
                 "value is not an integer: '{}'".format(s2)) from e
+    elif valtype == float:
+        try:
+            val = float(s2)
+        except ValueError as e:
+            raise ValidationError(
+                "value is not a float: '{}'".format(s2)) from e
     else:
         if len(s2) > 0:
             val = s2
@@ -61,6 +69,8 @@ def value_type(path):
     ext = os.path.splitext(path)[1]
     if ext in Const.int_exts:
         return int
+    elif ext in Const.float_exts:
+        return float
     elif ext in Const.str_exts:
         return str
     else:
@@ -124,9 +134,9 @@ def series_paths_sorted(root):
     # files of known type
     return file_paths_sorted(root, lambda fname: value_type(fname) is not None)
 
-def int_paths_sorted(root):
-    # files with int values
-    return file_paths_sorted(root, lambda fname: value_type(fname) == int)
+def num_paths_sorted(root):
+    # files with numeric values
+    return file_paths_sorted(root, lambda fname: value_type(fname) in Const.num_types)
 
 def cmd_view(args):
     path = args.path
@@ -251,7 +261,7 @@ def export_csv(path, outname, graph_only):
             print("exporting paths:", path)
             export_paths = [path]
         for ep in export_paths:
-            for fpath in int_paths_sorted(ep):
+            for fpath in num_paths_sorted(ep):
                 # set `graph` column to True if the file is whitelisted
                 graph = any(map(fpath.startswith, graph_paths))
                 export_append_rows(rows, fpath, graph)
@@ -369,6 +379,12 @@ def int_converter(s):
     except ValueError as e:
         raise ValueError("expected an integer but got: " + s)
 
+def float_converter(s):
+    try:
+        return float(s)
+    except ValueError as e:
+        raise ValueError("expected a float but got: " + s)
+
 def parse_date(date_string, format):
     # extend datetime.strptime formats with %s from the `date` program
     if format == "%s":
@@ -448,6 +464,8 @@ def entry_file(path):
 
     if valtype == int:
         input = make_input(prompt_prefix, "integer", int_converter, printer)
+    elif valtype == float:
+        input = make_input(prompt_prefix, "float", float_converter, printer)
     elif valtype == str:
         input = make_input(prompt_prefix, "string", identity, printer)
     else:
@@ -489,7 +507,7 @@ def entry_path(path):
         # try to handle the requested file regardless of its type
         entry_file(path)
     elif os.path.isdir(path):
-        for p in int_paths_sorted(path):
+        for p in num_paths_sorted(path):
             entry_file(p)
 
 
@@ -525,9 +543,10 @@ def cmd_entry(args):
 def make_arg_parser():
     import argparse
 
+    file_types_str = ", ".join(Const.int_exts + Const.float_exts + Const.str_exts)
     parser = argparse.ArgumentParser(
         description=("time series utility. The following file types are"
-                     "supported: " + ", ".join(Const.int_exts + Const.str_exts)))
+                     " supported: " + file_types_str))
     subparsers = parser.add_subparsers(dest="command", title="commands")
 
     listaccs = subparsers.add_parser(
