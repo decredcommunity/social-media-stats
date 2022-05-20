@@ -284,7 +284,7 @@ def export_csv(path, outname, graph_pathlist, graph_only):
     rows = []
     if os.path.isfile(path):
         # try to handle the file regardless of its type
-        export_append_rows(rows, path)
+        export_append_rows(rows, path, False)
     else:
         graph_paths = []
         if graph_pathlist and os.path.isfile(graph_pathlist):
