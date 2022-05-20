@@ -16,7 +16,6 @@ class Config:
     data_dir            = "data/data"
     export_filename     = "export.csv"
     profile_filename    = "profile.json"
-    graph_list_file     = "graph.list"
 
 
 class Const:
@@ -281,22 +280,22 @@ def export_append_rows(rows, fpath, graph):
         rows.append((ts, platform, account, metric, val, graph_int, tags))
 
 
-def export_csv(path, outname, graph_only):
+def export_csv(path, outname, graph_pathlist, graph_only):
     rows = []
     if os.path.isfile(path):
         # try to handle the file regardless of its type
         export_append_rows(rows, path)
     else:
         graph_paths = []
-        if os.path.isfile(Config.graph_list_file):
-            graph_paths = load_list(Config.graph_list_file)
-            print("loaded {} paths from {}".format(
-                len(graph_paths), Config.graph_list_file))
+        if graph_pathlist and os.path.isfile(graph_pathlist):
+            graph_paths = load_list(graph_pathlist)
+            print("loaded {} 'graph' paths from {}".format(
+                len(graph_paths), graph_pathlist))
         if graph_only:
             export_paths = graph_paths
-            print("exporting {} paths".format(len(export_paths)))
+            print("exporting only {} 'graph' paths".format(len(export_paths)))
         else:
-            print("exporting paths:", path)
+            print("exporting all paths:", path)
             export_paths = [path]
         for ep in export_paths:
             for fpath in num_paths_sorted(ep):
@@ -317,7 +316,10 @@ def export_csv(path, outname, graph_only):
 
 
 def cmd_export_csv(args):
-    export_csv(args.path, args.output, args.graph_only)
+    if args.graph_only and not args.graph_pathlist:
+        raise TsuError("-g (--graph-only) requires -p (--path-graphlist)")
+
+    export_csv(args.path, args.output, args.graph_pathlist, args.graph_only)
 
 
 def load_json(path):
@@ -640,11 +642,14 @@ def make_arg_parser():
     export.add_argument(
         "path", nargs="?",
         default=Config.data_dir,
-        help="path to search time series files")
+        help="path to search time series files in")
+    export.add_argument(
+        "-p", "--graph-pathlist",
+        help="list file with paths, data points in there will get graph=1")
     export.add_argument(
         "-g", "--graph-only",
         action="store_true",
-        help="export only paths listed in " + Config.graph_list_file)
+        help="export only 'graph' paths specified with -p")
     export.add_argument(
         "--output",
         default=Config.export_filename,
@@ -663,7 +668,7 @@ def make_arg_parser():
              " in it")
     entry.add_argument(
         "-p", "--pathlist",
-        help="list of paths to enter data in, one per line")
+        help="list file with paths to enter data in, one path per line")
     entry.set_defaults(func=cmd_entry)
 
     return parser
