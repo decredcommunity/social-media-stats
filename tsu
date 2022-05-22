@@ -270,11 +270,15 @@ def metric_attrs(path):
 
 
 def export_append_rows(rows, fpath):
+    if value_type(fpath) is None:
+        print("WARNING: exporting from unknown file type:", fpath)
+
     # Return True if data was exported from fpath into rows, False if
     # skipped.
     attrs = metric_attrs(fpath)
     if not attrs:
-        print("WARNING: could not derive (platform, account, metric):", fpath)
+        print("WARNING: could not derive (platform, account, metric),"
+              " skipping file:", fpath)
         return False
 
     platform, account, metric = attrs
