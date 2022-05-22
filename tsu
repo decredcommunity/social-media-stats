@@ -264,51 +264,44 @@ def metric_attrs(path):
     return platform, account_str, metric
 
 
-def export_append_rows(rows, fpath, graph):
+def export_append_rows(rows, fpath):
     attrs = metric_attrs(fpath)
     if not attrs:
         print("WARNING: skipping unexpected file:", fpath)
         return
 
     platform, account, metric = attrs
-    graph_int = int(graph)
     tags = ""
     profile = load_profile(os.path.dirname(fpath))
     if profile and ("tags" in profile):
         tags = " ".join(profile["tags"])
     for ts, val in csv_iter(fpath):
-        rows.append((ts, platform, account, metric, val, graph_int, tags))
+        rows.append((ts, platform, account, metric, val, tags))
 
 
-def export_csv(path, outname, graph_pathlist, graph_only):
+def export_csv(path, outname, pathlist):
     rows = []
+    # todo: fix confusing API where pathlist is not checked when isfile(path)
     if os.path.isfile(path):
         # try to handle the file regardless of its type
-        export_append_rows(rows, path, False)
+        export_append_rows(rows, path)
     else:
-        graph_paths = []
-        if graph_pathlist and os.path.isfile(graph_pathlist):
-            graph_paths = load_list(graph_pathlist)
-            print("loaded {} 'graph' paths from {}".format(
-                len(graph_paths), graph_pathlist))
-        if graph_only:
-            export_paths = graph_paths
-            print("exporting only {} 'graph' paths".format(len(export_paths)))
+        if pathlist and os.path.isfile(pathlist):
+            paths = load_list(pathlist)
+            print("exporting only {} paths from {}".format(
+                len(paths), pathlist))
         else:
-            print("exporting all paths:", path)
-            export_paths = [path]
-        for ep in export_paths:
-            for fpath in num_paths_sorted(ep):
-                # set `graph` column to True if the file is whitelisted
-                graph = any(map(fpath.startswith, graph_paths))
-                export_append_rows(rows, fpath, graph)
+            print("exporting all paths under:", path)
+            paths = [path]
+        for p in paths:
+            for fpath in num_paths_sorted(p):
+                export_append_rows(rows, fpath)
 
-    # sort by timestamp, in-place
+    # sort by timestamp (first row cell), in-place
     rows.sort()
     print("found {} data points".format(len(rows)))
 
-    header = ("timestamp", "platform", "account", "metric", "value", "graph",
-              "tags")
+    header = ("timestamp", "platform", "account", "metric", "value", "tags")
 
     # overwrite existing file
     write_csv(outname, chain([header], rows))
@@ -316,10 +309,7 @@ def export_csv(path, outname, graph_pathlist, graph_only):
 
 
 def cmd_export_csv(args):
-    if args.graph_only and not args.graph_pathlist:
-        raise TsuError("-g (--graph-only) requires -p (--path-graphlist)")
-
-    export_csv(args.path, args.output, args.graph_pathlist, args.graph_only)
+    export_csv(args.path, args.output, args.pathlist)
 
 
 def load_json(path):
@@ -644,12 +634,8 @@ def make_arg_parser():
         default=Config.data_dir,
         help="path to search time series files in")
     export.add_argument(
-        "-p", "--graph-pathlist",
-        help="list file with paths, data points in there will get graph=1")
-    export.add_argument(
-        "-g", "--graph-only",
-        action="store_true",
-        help="export only 'graph' paths specified with -p")
+        "-p", "--pathlist",
+        help="list file with paths to export data points from")
     export.add_argument(
         "--output",
         default=Config.export_filename,
