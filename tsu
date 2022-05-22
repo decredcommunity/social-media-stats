@@ -160,6 +160,7 @@ def file_paths_sorted(root, pred):
     else:
         raise TsuError("root path is not a file nor a directory: " + root)
 
+
 def series_paths_sorted(root):
     # files of known type
     return file_paths_sorted(root, lambda fname: value_type(fname) is not None)
@@ -269,10 +270,12 @@ def metric_attrs(path):
 
 
 def export_append_rows(rows, fpath):
+    # Return True if data was exported from fpath into rows, False if
+    # skipped.
     attrs = metric_attrs(fpath)
     if not attrs:
         print("WARNING: could not derive (platform, account, metric):", fpath)
-        return
+        return False
 
     platform, account, metric = attrs
     tags = ""
@@ -281,31 +284,43 @@ def export_append_rows(rows, fpath):
         tags = " ".join(profile["tags"])
     for ts, val in csv_iter(fpath):
         rows.append((ts, platform, account, metric, val, tags))
+    return True
 
 
 def export_csv(path, outname, pathlist):
     rows = []
+    exported_files = 0
+    skipped_files = 0
     # todo: fix confusing API where pathlist is not checked when isfile(path)
     if os.path.isfile(path):
         # try to handle the file regardless of its type
-        export_append_rows(rows, path)
+        ok = export_append_rows(rows, path)
+        if ok:
+            exported_files += 1
+        else:
+            skipped_files += 1
     else:
         if pathlist:
             if not os.path.isfile(pathlist):
                 raise TsuError("pathlist is not a file: " + pathlist)
             paths = load_list(pathlist)
-            print("exporting only {} paths from {}".format(
+            print("exporting {} paths listed in {}".format(
                 len(paths), pathlist))
         else:
             print("exporting all paths under:", path)
             paths = [path]
         for p in paths:
             for fpath in num_paths_sorted(p):
-                export_append_rows(rows, fpath)
+                ok = export_append_rows(rows, fpath)
+                if ok:
+                    exported_files += 1
+                else:
+                    skipped_files += 1
 
     # sort by timestamp (first row cell), in-place
     rows.sort()
-    print("found {} data points".format(len(rows)))
+    print("exporting {} data points from {} files (skipped {} files)"
+          "".format(len(rows), exported_files, skipped_files))
 
     header = ("timestamp", "platform", "account", "metric", "value", "tags")
 
