@@ -295,14 +295,19 @@ def export_csv(path, outname, pathlist):
     rows = []
     exported_files = 0
     skipped_files = 0
-    # todo: fix confusing API where pathlist is not checked when isfile(path)
-    if os.path.isfile(path):
-        # try to handle the file regardless of its type
-        ok = export_append_rows(rows, path)
+
+    def export_path(p):
+        ok = export_append_rows(rows, p)
+        nonlocal exported_files, skipped_files
         if ok:
             exported_files += 1
         else:
             skipped_files += 1
+
+    # todo: fix confusing API where pathlist is not checked when isfile(path)
+    if os.path.isfile(path):
+        # try to handle the file regardless of its type
+        export_path(path)
     else:
         if pathlist:
             if not os.path.isfile(pathlist):
@@ -316,18 +321,10 @@ def export_csv(path, outname, pathlist):
         for p in paths:
             if os.path.isfile(p):
                 # try to handle the file regardless of its type
-                ok = export_append_rows(rows, p)
-                if ok:
-                    exported_files += 1
-                else:
-                    skipped_files += 1
+                export_path(p)
             elif os.path.isdir(p):
                 for fpath in num_paths_sorted(p):
-                    ok = export_append_rows(rows, fpath)
-                    if ok:
-                        exported_files += 1
-                    else:
-                        skipped_files += 1
+                    export_path(fpath)
 
     # sort by timestamp (first row cell), in-place
     rows.sort()
