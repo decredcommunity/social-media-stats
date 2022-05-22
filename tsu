@@ -310,12 +310,20 @@ def export_csv(path, outname, pathlist):
             print("exporting all paths under:", path)
             paths = [path]
         for p in paths:
-            for fpath in num_paths_sorted(p):
-                ok = export_append_rows(rows, fpath)
+            if os.path.isfile(p):
+                # try to handle the file regardless of its type
+                ok = export_append_rows(rows, p)
                 if ok:
                     exported_files += 1
                 else:
                     skipped_files += 1
+            elif os.path.isdir(p):
+                for fpath in num_paths_sorted(p):
+                    ok = export_append_rows(rows, fpath)
+                    if ok:
+                        exported_files += 1
+                    else:
+                        skipped_files += 1
 
     # sort by timestamp (first row cell), in-place
     rows.sort()
