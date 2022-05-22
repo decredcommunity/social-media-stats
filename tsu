@@ -649,13 +649,14 @@ def make_arg_parser():
         "entry", aliases=["e"],
         help="enter data manually",
         description=cmd_entry.__doc__)
-    entry.add_argument(
+    entry_target = entry.add_mutually_exclusive_group(required=True)
+    entry_target.add_argument(
         "path", nargs="?",
         default=Config.data_dir,
         help="file or directory path to enter data in; if directory, the"
              " program will prompt data entry for each time series file found"
              " in it")
-    entry.add_argument(
+    entry_target.add_argument(
         "-p", "--pathlist",
         help="list file with paths to enter data in, one path per line")
     entry.set_defaults(func=cmd_entry)
