@@ -271,7 +271,7 @@ def metric_attrs(path):
 def export_append_rows(rows, fpath):
     attrs = metric_attrs(fpath)
     if not attrs:
-        print("WARNING: skipping unexpected file:", fpath)
+        print("WARNING: could not derive (platform, account, metric):", fpath)
         return
 
     platform, account, metric = attrs
