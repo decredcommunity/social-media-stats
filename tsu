@@ -629,11 +629,12 @@ def make_arg_parser():
         description=("Export data from arbitrary tree of time series files"
                      " into a single file (" + Config.export_filename +
                      " by default), overwriting it."))
-    export.add_argument(
+    export_src = export.add_mutually_exclusive_group(required=True)
+    export_src.add_argument(
         "path", nargs="?",
         default=Config.data_dir,
         help="path to search time series files in")
-    export.add_argument(
+    export_src.add_argument(
         "-p", "--pathlist",
         help="list file with paths to export data points from")
     export.add_argument(
