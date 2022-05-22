@@ -146,15 +146,19 @@ def validate(path, view=False, limit=None):
 
 
 def file_paths_sorted(root, pred):
-    if not os.path.isdir(root):
-        raise TsuError("root path is not a directory: " + root)
     paths = []
-    for curdir, dirs, files in os.walk(root):
-        for fname in files:
-            if pred(fname):
-                paths.append(os.path.join(curdir, fname))
-    return sorted(paths)
-
+    if os.path.isfile(root):
+        if pred(root):
+            paths.append(root)
+        return paths
+    elif os.path.isdir(root):
+        for curdir, dirs, files in os.walk(root):
+            for fname in files:
+                if pred(fname):
+                    paths.append(os.path.join(curdir, fname))
+        return sorted(paths)
+    else:
+        raise TsuError("root path is not a file nor a directory: " + root)
 
 def series_paths_sorted(root):
     # files of known type
