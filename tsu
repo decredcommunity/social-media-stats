@@ -286,7 +286,9 @@ def export_csv(path, outname, pathlist):
         # try to handle the file regardless of its type
         export_append_rows(rows, path)
     else:
-        if pathlist and os.path.isfile(pathlist):
+        if pathlist:
+            if not os.path.isfile(pathlist):
+                raise TsuError("pathlist is not a file: " + pathlist)
             paths = load_list(pathlist)
             print("exporting only {} paths from {}".format(
                 len(paths), pathlist))
