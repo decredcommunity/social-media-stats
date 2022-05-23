@@ -22,7 +22,7 @@ class Const:
     int_exts            = (".csv", ".tsi")
     float_exts          = (".tsf", )
     str_exts            = (".tss", )
-    num_types           = [int, float]
+    numeric_types       = [int, float]
 
 
 # Define and catch our own exception to avoid intercepting language and library
@@ -97,6 +97,14 @@ def value_type(path):
         return None
 
 
+def is_known_type(path):
+    return value_type(path) is not None
+
+
+def is_numeric_type(path):
+    return value_type(path) in Const.numeric_types
+
+
 def csv_iter(filename):
     """Generator yielding rows of the csv file."""
     with open(filename, newline="") as f:
@@ -145,43 +153,41 @@ def validate(path, view=False, limit=None):
             print("err {}:{}: {}".format(path, line_num, e))
 
 
-def file_paths_sorted(root, pred):
+def file_paths_sorted(root, pred, filter_root=True, error=True):
     paths = []
     if os.path.isfile(root):
-        if pred(root):
+        # filter_root=False allows a uniform interface for handling two
+        # different cases. When a caller (indirectly it is the user)
+        # _knows_ that root is a file that must be used regardless of
+        # its type, predicate check is skipped. However, when root is a
+        # directory that must be walked, the caller (user) wants the
+        # discovered files to be filtered with pred.
+        root_ok = pred(root)
+        if (not filter_root) or root_ok:
             paths.append(root)
-        return paths
+        if not root_ok:
+            print("WARN: test {} failed for: {}".format(pred.__name__, root))
+
     elif os.path.isdir(root):
         for curdir, dirs, files in os.walk(root):
             for fname in files:
                 if pred(fname):
                     paths.append(os.path.join(curdir, fname))
-        return sorted(paths)
+
     else:
-        raise TsuError("root path is neither a file nor a directory: " + root)
+        if error:
+            raise TsuError("path is neither a file nor a directory: " + root)
+        else:
+            print("WARN: path is neither a file nor a directory: " + root)
 
-
-def series_paths_sorted(root):
-    # files of known type
-    return file_paths_sorted(root, lambda fname: value_type(fname) is not None)
-
-
-def num_paths_sorted(root):
-    # files with numeric values
-    return file_paths_sorted(root, lambda fname: value_type(fname) in Const.num_types)
+    return sorted(paths)
 
 
 def cmd_view(args):
-    path = args.path
-    if os.path.isfile(path):
-        # try to handle the file regardless of its type
-        validate(path, view=True, limit=args.limit)
-    elif os.path.isdir(path):
-        for p in series_paths_sorted(path):
-            print("----", p)
-            validate(p, view=True, limit=args.limit)
-    else:
-        raise TsuError("path is neither a file nor a directory: " + path)
+    root = args.path
+    for fp in file_paths_sorted(root, pred=is_known_type, filter_root=False):
+        print("----", fp)
+        validate(fp, view=True, limit=args.limit)
 
 
 def cmd_latest(args):
@@ -211,11 +217,11 @@ def cmd_latest(args):
 
 
 def cmd_list_accounts(args):
-    path = Config.data_dir
+    root = Config.data_dir
 
     # if the directory contains the profile descriptor, it is an account
-    profile_files = file_paths_sorted(
-        path, lambda fname: fname == Config.profile_filename)
+    profile_files = file_paths_sorted(root,
+        pred=lambda fname: fname == Config.profile_filename)
     acc_dirs = list(map(os.path.dirname, profile_files))
 
     for ad in acc_dirs:
@@ -223,15 +229,9 @@ def cmd_list_accounts(args):
 
 
 def cmd_validate(args):
-    path = args.path
-    if os.path.isfile(path):
-        # try to handle the file regardless of its type
-        validate(path)
-    elif os.path.isdir(path):
-        for p in series_paths_sorted(path):
-            validate(p)
-    else:
-        raise TsuError("path is neither a file nor a directory: " + path)
+    root = args.path
+    for fp in file_paths_sorted(root, pred=is_known_type, filter_root=False):
+        validate(fp)
 
 
 def load_list(path):
@@ -295,32 +295,23 @@ def export_append_rows(rows, fpath):
     return True
 
 
-def export_csv(paths, outname):
+def export_csv(roots, outname):
     rows = []
     exported_paths = 0
     skipped_paths = 0
 
-    def export_path(p):
-        ok = export_append_rows(rows, p)
-        nonlocal exported_paths, skipped_paths
-        if ok:
-            exported_paths += 1
-        else:
-            skipped_paths += 1
-
-    for p in paths:
-        if os.path.isfile(p):
-            # if any path explicitly specified by the user is a file,
-            # try exporting it regardless of its type
-            export_path(p)
-        elif os.path.isdir(p):
-            # otherwise, filter the walked (discovered indirectly) paths
-            # and only take time series files with numeric values
-            for numpath in num_paths_sorted(p):
-                export_path(numpath)
-        else:
-            skipped_paths += 1
-            print("WARN: export path is neither a file nor a directory:", p)
+    for root in roots:
+        # if any path explicitly specified by the user is a file, try
+        # exporting it regardless of its type
+        # otherwise, filter the walked (discovered indirectly) paths
+        # and only take time series files with numeric values
+        for fp in file_paths_sorted(root, pred=is_numeric_type,
+                                    filter_root=False, error=False):
+            ok = export_append_rows(rows, fp)
+            if ok:
+                exported_paths += 1
+            else:
+                skipped_paths += 1
 
     # sort by timestamp (first row cell), in-place
     rows.sort()
@@ -340,14 +331,14 @@ def cmd_export_csv(args):
     if pathlist:
         if not os.path.isfile(pathlist):
             raise TsuError("pathlist is not a file: " + pathlist)
-        paths = load_list(pathlist)
-        print("exporting {} paths listed in: {}".format(len(paths), pathlist))
+        roots = load_list(pathlist)
+        print("exporting {} paths listed in: {}".format(len(roots), pathlist))
     else:
         path = args.path
-        paths = [path]
+        roots = [path]
         print("exporting all paths under:", path)
 
-    export_csv(paths, args.output)
+    export_csv(roots, args.output)
 
 
 def load_json(path):
@@ -581,15 +572,10 @@ def entry_file(path):
     printer("saved: time {}, value {}{}".format(dt, val, delta))
 
 
-def entry_path(path):
-    if os.path.isfile(path):
-        # try to handle the requested file regardless of its type
-        entry_file(path)
-    elif os.path.isdir(path):
-        for p in num_paths_sorted(path):
-            entry_file(p)
-    else:
-        print("WARN: path is neither a file nor a directory:", path)
+def entry_path(root):
+    for fp in file_paths_sorted(root, pred=is_numeric_type,
+                                filter_root=True, error=False):
+        entry_file(fp)
 
 
 def cmd_entry(args):
