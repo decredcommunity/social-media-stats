@@ -291,7 +291,7 @@ def export_append_rows(rows, fpath):
     return True
 
 
-def export_csv(path, outname, pathlist):
+def export_csv(paths, outname):
     rows = []
     exported_files = 0
     skipped_files = 0
@@ -304,27 +304,16 @@ def export_csv(path, outname, pathlist):
         else:
             skipped_files += 1
 
-    # todo: fix confusing API where pathlist is not checked when isfile(path)
-    if os.path.isfile(path):
-        # try to handle the file regardless of its type
-        export_path(path)
-    else:
-        if pathlist:
-            if not os.path.isfile(pathlist):
-                raise TsuError("pathlist is not a file: " + pathlist)
-            paths = load_list(pathlist)
-            print("exporting {} paths listed in {}".format(
-                len(paths), pathlist))
-        else:
-            print("exporting all paths under:", path)
-            paths = [path]
-        for p in paths:
-            if os.path.isfile(p):
-                # try to handle the file regardless of its type
-                export_path(p)
-            elif os.path.isdir(p):
-                for fpath in num_paths_sorted(p):
-                    export_path(fpath)
+    for p in paths:
+        if os.path.isfile(p):
+            # if any path explicitly specified by the user is a file,
+            # try exporting it regardless of its type
+            export_path(p)
+        elif os.path.isdir(p):
+            # otherwise, filter the walked (discovered indirectly) paths
+            # and only take time series files with numeric values
+            for numpath in num_paths_sorted(p):
+                export_path(numpath)
 
     # sort by timestamp (first row cell), in-place
     rows.sort()
@@ -339,7 +328,19 @@ def export_csv(path, outname, pathlist):
 
 
 def cmd_export_csv(args):
-    export_csv(args.path, args.output, args.pathlist)
+    pathlist = args.pathlist
+
+    if pathlist:
+        if not os.path.isfile(pathlist):
+            raise TsuError("pathlist is not a file: " + pathlist)
+        paths = load_list(pathlist)
+        print("exporting {} paths listed in: {}".format(len(paths), pathlist))
+    else:
+        path = args.path
+        paths = [path]
+        print("exporting all paths under:", path)
+
+    export_csv(paths, args.output)
 
 
 def load_json(path):
