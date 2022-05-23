@@ -158,7 +158,7 @@ def file_paths_sorted(root, pred):
                     paths.append(os.path.join(curdir, fname))
         return sorted(paths)
     else:
-        raise TsuError("root path is not a file nor a directory: " + root)
+        raise TsuError("root path is neither a file nor a directory: " + root)
 
 
 def series_paths_sorted(root):
@@ -180,6 +180,8 @@ def cmd_view(args):
         for p in series_paths_sorted(path):
             print("----", p)
             validate(p, view=True, limit=args.limit)
+    else:
+        raise TsuError("path is neither a file nor a directory: " + path)
 
 
 def cmd_latest(args):
@@ -228,6 +230,8 @@ def cmd_validate(args):
     elif os.path.isdir(path):
         for p in series_paths_sorted(path):
             validate(p)
+    else:
+        raise TsuError("path is neither a file nor a directory: " + path)
 
 
 def load_list(path):
@@ -293,16 +297,16 @@ def export_append_rows(rows, fpath):
 
 def export_csv(paths, outname):
     rows = []
-    exported_files = 0
-    skipped_files = 0
+    exported_paths = 0
+    skipped_paths = 0
 
     def export_path(p):
         ok = export_append_rows(rows, p)
-        nonlocal exported_files, skipped_files
+        nonlocal exported_paths, skipped_paths
         if ok:
-            exported_files += 1
+            exported_paths += 1
         else:
-            skipped_files += 1
+            skipped_paths += 1
 
     for p in paths:
         if os.path.isfile(p):
@@ -314,11 +318,14 @@ def export_csv(paths, outname):
             # and only take time series files with numeric values
             for numpath in num_paths_sorted(p):
                 export_path(numpath)
+        else:
+            skipped_paths += 1
+            print("WARN: export path is neither a file nor a directory:", p)
 
     # sort by timestamp (first row cell), in-place
     rows.sort()
-    print("exporting {} data points from {} files (skipped {} files)"
-          "".format(len(rows), exported_files, skipped_files))
+    print("exporting {} data points from {} files (skipped {} paths)"
+          "".format(len(rows), exported_paths, skipped_paths))
 
     header = ("timestamp", "platform", "account", "metric", "value", "tags")
 
@@ -581,6 +588,8 @@ def entry_path(path):
     elif os.path.isdir(path):
         for p in num_paths_sorted(path):
             entry_file(p)
+    else:
+        print("WARN: path is neither a file nor a directory:", path)
 
 
 def cmd_entry(args):
