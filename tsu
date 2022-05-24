@@ -15,7 +15,7 @@ import time
 class Config:
     data_dir            = "data/data"
     export_filename     = "export.csv"
-    profile_filename    = "profile.json"
+    account_filename    = "profile.json"
 
 
 class Const:
@@ -227,10 +227,10 @@ def cmd_latest(args):
 def cmd_list_accounts(args):
     root = Config.data_dir
 
-    # if the directory contains the profile descriptor, it is an account
-    profile_files = file_paths_sorted(root,
-        pred=lambda fname: fname == Config.profile_filename)
-    acc_dirs = list(map(os.path.dirname, profile_files))
+    # if the directory contains the account descriptor, it is an account
+    acc_files = file_paths_sorted(root,
+        pred=lambda fname: fname == Config.account_filename)
+    acc_dirs = list(map(os.path.dirname, acc_files))
 
     for ad in acc_dirs:
         print(ad)
@@ -254,10 +254,10 @@ def strip_prefix(s, p):
         return s
 
 
-def load_profile(dirpath):
-    ppath = os.path.join(dirpath, Config.profile_filename)
-    if os.path.exists(ppath):
-        return load_json(ppath)
+def load_acc_meta(dirpath):
+    apath = os.path.join(dirpath, Config.account_filename)
+    if os.path.exists(apath):
+        return load_json(apath)
     else:
         return None
 
@@ -295,9 +295,9 @@ def export_append_rows(rows, fpath):
 
     platform, account, metric = attrs
     tags = ""
-    profile = load_profile(os.path.dirname(fpath))
-    if profile and ("tags" in profile):
-        tags = " ".join(profile["tags"])
+    acc_meta = load_acc_meta(os.path.dirname(fpath))
+    if acc_meta and ("tags" in acc_meta):
+        tags = " ".join(acc_meta["tags"])
     for ts, val in csv_iter(fpath):
         rows.append((ts, platform, account, metric, val, tags))
     return True
@@ -363,15 +363,15 @@ def replace_url(url):
 
 
 def make_hint(dirpath, default_hint):
-    profile = load_profile(dirpath)
+    acc_meta = load_acc_meta(dirpath)
     hint = ""
-    if profile:
-        if "name" in profile:
-            hint += '"' + profile["name"] + '"'
-        if "url" in profile:
+    if acc_meta:
+        if "name" in acc_meta:
+            hint += '"' + acc_meta["name"] + '"'
+        if "url" in acc_meta:
             if hint:
                 hint += " "
-            hint += replace_url(profile["url"])
+            hint += replace_url(acc_meta["url"])
 
     return hint if hint else default_hint
 
