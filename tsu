@@ -35,6 +35,10 @@ class ValidationError(TsuError):
     pass
 
 
+def warn(template, *args):
+    print("WARN: " + template.format(*args))
+
+
 def parse_timestamp(s):
     try:
         tsi = int(s)
@@ -166,7 +170,7 @@ def file_paths_sorted(root, pred, filter_root=True, error=True):
         if (not filter_root) or root_ok:
             paths.append(root)
         if not root_ok:
-            print("WARN: test {} failed for: {}".format(pred.__name__, root))
+            warn("test {} failed for: {}", pred.__name__, root)
 
     elif os.path.isdir(root):
         for curdir, dirs, files in os.walk(root):
@@ -178,7 +182,7 @@ def file_paths_sorted(root, pred, filter_root=True, error=True):
         if error:
             raise TsuError("path is neither a file nor a directory: " + root)
         else:
-            print("WARN: path is neither a file nor a directory: " + root)
+            warn("path is neither a file nor a directory: {}", root)
 
     return sorted(paths)
 
@@ -200,11 +204,11 @@ def cmd_latest(args):
     print("{:-<20}|{:-<24}|{:-<24}|{:-<20}|{:-<7}".format("", "", "", "", ""))
     for accfile in accfiles:
         if not os.path.isfile(accfile):
-            print("WARN: not a file: " + accfile)
+            warn("not a file: {}", accfile)
             continue
         rows = list(csv_iter(accfile))
         if len(rows) < 1:
-            print("WARN: no data: " + accfile)
+            warn("no data: {}", accfile)
             continue
         valtype = value_type(accfile)
         last_dt, last_val = parse_record(rows[-1], valtype)
@@ -275,14 +279,14 @@ def metric_attrs(path):
 
 def export_append_rows(rows, fpath):
     if value_type(fpath) is None:
-        print("WARNING: exporting from unknown file type:", fpath)
+        warn("exporting from unknown file type: {}", fpath)
 
     # Return True if data was exported from fpath into rows, False if
     # skipped.
     attrs = metric_attrs(fpath)
     if not attrs:
-        print("WARNING: could not derive (platform, account, metric),"
-              " skipping file:", fpath)
+        warn("could not derive (platform, account, metric), skipping file: {}",
+             fpath)
         return False
 
     platform, account, metric = attrs
@@ -509,7 +513,7 @@ def identity(x):
 def make_prompt_prefix(path):
     attrs = metric_attrs(path)
     if not attrs:
-        print("WARNING: could not determine account/metric for:", path)
+        warn("could not determine account/metric for: {}", path)
         return "n/a"
     _, account, metric = attrs
     return account + "/" + metric
