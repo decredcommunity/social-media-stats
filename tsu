@@ -109,15 +109,15 @@ def is_numeric_type(path):
     return value_type(path) in Const.numeric_types
 
 
-def csv_iter(filename):
+def csv_iter(path):
     """Generator yielding rows of the csv file."""
-    with open(filename, newline="") as f:
+    with open(path, newline="") as f:
         yield from csv.reader(f)
 
 
-def write_csv(filename, rows):
+def write_csv(path, rows):
     # overwrite existing file
-    with open(filename, "w", newline="") as f:
+    with open(path, "w", newline="") as f:
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
         writer.writerows(rows)
 
@@ -289,7 +289,7 @@ def export_append_rows(rows, fpath):
     # skipped.
     attrs = metric_attrs(fpath)
     if not attrs:
-        warn("could not derive (platform, account, metric), skipping file: {}",
+        warn("could not derive (platform, account, metric), skipping path: {}",
              fpath)
         return False
 
@@ -657,7 +657,7 @@ def make_arg_parser():
 
     export = subparsers.add_parser(
         "export",
-        help="export data into a single file",
+        help="export data into a single CSV file",
         description=("Export data from arbitrary tree of time series files"
                      " into a single file (" + Config.export_filename +
                      " by default), overwriting it."))
@@ -668,7 +668,7 @@ def make_arg_parser():
         help="path to search time series files in")
     export_src.add_argument(
         "-p", "--pathlist",
-        help="list file with paths to export data points from")
+        help="list file with paths to export data points from, one per line")
     export.add_argument(
         "--output",
         default=Config.export_filename,
