@@ -136,11 +136,7 @@ def validate(path, view=False, limit=None):
     first = 0
     rows = all_rows
     if limit is not None:
-        try:
-            int_limit = int(limit)
-        except ValueError as e:
-            raise TsuError("limit is not an integer: '{}'".format(limit)) from e
-        first = max(len(all_rows) - int_limit, 0)
+        first = max(len(all_rows) - limit, 0)
         rows = all_rows[first:]
 
     # start counting from 1 to match file line number
@@ -188,10 +184,18 @@ def file_paths_sorted(root, pred, filter_root=True, error=True):
 
 
 def cmd_view(args):
+    limit = args.limit
+    int_limit = None
+    if limit is not None:
+        try:
+            int_limit = int(limit)
+        except ValueError as e:
+            raise TsuError("limit is not an integer: '{}'".format(limit)) from e
+
     root = args.path
     for fp in file_paths_sorted(root, pred=is_known_type, filter_root=False):
         print("----", fp)
-        validate(fp, view=True, limit=args.limit)
+        validate(fp, view=True, limit=int_limit)
 
 
 def cmd_latest(args):
