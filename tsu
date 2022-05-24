@@ -333,8 +333,6 @@ def cmd_export_csv(args):
     pathlist = args.pathlist
 
     if pathlist:
-        if not os.path.isfile(pathlist):
-            raise TsuError("pathlist is not a file: " + pathlist)
         roots = load_list(pathlist)
         print("exporting {} paths listed in: {}".format(len(roots), pathlist))
     else:
@@ -699,7 +697,7 @@ def main():
     if args.command:
         try:
             args.func(args)
-        except TsuError as e:
+        except (TsuError, FileNotFoundError) as e:
             print("error:", e)
         except KeyboardInterrupt:
             print("\naborting")
