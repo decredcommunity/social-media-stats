@@ -199,29 +199,29 @@ def cmd_view(args):
 
 
 def cmd_latest(args):
-    accfiles = load_list(args.acclist)
-    if not accfiles:
+    metric_paths = load_list(args.metriclist)
+    if not metric_paths:
         return
-    accfmt = "{:20}|{:24}|{:24}"
-    headerfmt = accfmt + "|{:20}|{:7}"
+    metfmt = "{:20}|{:24}|{:24}"
+    headerfmt = metfmt + "|{:20}|{:7}"
     print(headerfmt.format("platform", "account", "metric", "date", "value"))
     print("{:-<20}|{:-<24}|{:-<24}|{:-<20}|{:-<7}".format("", "", "", "", ""))
-    for accfile in accfiles:
-        if not os.path.isfile(accfile):
-            warn("not a file: {}", accfile)
+    for mp in metric_paths:
+        if not os.path.isfile(mp):
+            warn("not a file: {}", mp)
             continue
-        rows = list(csv_iter(accfile))
+        rows = list(csv_iter(mp))
         if len(rows) < 1:
-            warn("no data: {}", accfile)
+            warn("no data: {}", mp)
             continue
-        valtype = value_type(accfile)
+        valtype = value_type(mp)
         last_dt, last_val = parse_record(rows[-1], valtype)
-        attrs = metric_attrs(accfile)
+        attrs = metric_attrs(mp)
         if attrs:
-            accstr = accfmt.format(*attrs)
+            metstr = metfmt.format(*attrs)
         else:
-            accstr = "{:68}".format(accfile)
-        print("{}|{:20}|{:>7,}".format(accstr, str(last_dt), last_val))
+            metstr = "{:68}".format(mp)
+        print("{}|{:20}|{:>7,}".format(metstr, str(last_dt), last_val))
 
 
 def cmd_list_accounts(args):
@@ -649,10 +649,10 @@ def make_arg_parser():
 
     latest = subparsers.add_parser(
         "latest",
-        help="print latest stats for accounts listed in a given file")
+        help="print latest values for metrics listed in a file")
     latest.add_argument(
-        "acclist",
-        help="path to file holding a list of accounts, one per line")
+        "metriclist",
+        help="list file with metric files, one per line")
     latest.set_defaults(func=cmd_latest)
 
     export = subparsers.add_parser(
