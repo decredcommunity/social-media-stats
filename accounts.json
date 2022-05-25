@@ -1,0 +1,489 @@
+[
+  {
+    "path": "coingecko.com/decred",
+    "url": "https://www.coingecko.com/en/coins/decred"
+  },
+  {
+    "path": "coinmarketcap.com/decred",
+    "url": "https://coinmarketcap.com/currencies/decred/"
+  },
+  {
+    "path": "discord/decred",
+    "url": "https://discord.gg/GJ2GXfz"
+  },
+  {
+    "created_utc": "2018-09-17",
+    "path": "facebook.com/Decred-Arabia",
+    "tags": ["regional"],
+    "url": "https://www.facebook.com/DecredArabia/"
+  },
+  {
+    "created_utc": "2018-06-14",
+    "path": "facebook.com/DecredChinese",
+    "tags": ["regional"],
+    "url": "https://www.facebook.com/DecredChinese/"
+  },
+  {
+    "created_utc": "2019-04-17",
+    "path": "facebook.com/DecredESP",
+    "tags": ["regional"],
+    "url": "https://www.facebook.com/DecredESP/"
+  },
+  {
+    "created_utc": "2018-01-31",
+    "path": "facebook.com/DecredPolska",
+    "tags": ["regional"],
+    "url": "https://www.facebook.com/DecredPolska/"
+  },
+  {
+    "created_utc": "2016-08-17",
+    "note": "operated by @alexsolo",
+    "path": "facebook.com/Decredcash",
+    "url": "https://www.facebook.com/Decredcash/"
+  },
+  {
+    "created_utc": "2019-06-26",
+    "path": "facebook.com/decredau",
+    "tags": ["regional"],
+    "url": "https://www.facebook.com/decredau/"
+  },
+  {
+    "created_utc": "2016-01-09",
+    "note": "private group",
+    "path": "facebook.com/decredbrasil",
+    "tags": ["regional"],
+    "url": "https://www.facebook.com/groups/decredbrasil/"
+  },
+  {
+    "created_utc": "2016-01-09",
+    "path": "facebook.com/decredinternational",
+    "url": "https://www.facebook.com/groups/decredinternational/"
+  },
+  {
+    "created_utc": "2016-03-24",
+    "path": "facebook.com/decredproject",
+    "url": "https://www.facebook.com/decredproject/"
+  },
+  {
+    "created_utc": "2020-05",
+    "path": "gab.com/decredproject",
+    "url": "https://gab.com/decredproject"
+  },
+  {
+    "path": "github.com/btcsuite/btcd",
+    "url": "https://github.com/btcsuite/btcd"
+  },
+  {
+    "path": "github.com/btcsuite/btcwallet",
+    "url": "https://github.com/btcsuite/btcwallet"
+  },
+  {
+    "path": "github.com/decred/dcrd",
+    "url": "https://github.com/decred/dcrd"
+  },
+  {
+    "path": "github.com/decred/dcrdata",
+    "url": "https://github.com/decred/dcrdata"
+  },
+  {
+    "path": "github.com/decred/dcrdex",
+    "url": "https://github.com/decred/dcrdex"
+  },
+  {
+    "path": "github.com/decred/dcrtime",
+    "url": "https://github.com/decred/dcrtime"
+  },
+  {
+    "path": "github.com/decred/dcrwallet",
+    "url": "https://github.com/decred/dcrwallet"
+  },
+  {
+    "path": "github.com/decred/decrediton",
+    "url": "https://github.com/decred/decrediton"
+  },
+  {
+    "path": "github.com/decred/politeia",
+    "url": "https://github.com/decred/politeia"
+  },
+  {
+    "path": "instagram.com/decred_es",
+    "tags": ["regional"],
+    "url": "https://www.instagram.com/decred_es/"
+  },
+  {
+    "path": "instagram.com/decredbr",
+    "tags": ["regional"],
+    "url": "https://www.instagram.com/decredbr/"
+  },
+  {
+    "path": "instagram.com/decredproject",
+    "url": "https://www.instagram.com/decredproject/"
+  },
+  {
+    "path": "linkedin.com/dcrdex",
+    "url": "https://www.linkedin.com/showcase/dcrdex"
+  },
+  {
+    "path": "linkedin.com/decred-politeia",
+    "url": "https://www.linkedin.com/showcase/decred-politeia"
+  },
+  {
+    "path": "linkedin.com/decredproject",
+    "url": "https://www.linkedin.com/company/decredproject"
+  },
+  {
+    "note": "https://decred.org/matrix/",
+    "path": "matrix/matrix.decred.org",
+    "url": "matrix.decred.org"
+  },
+  {
+    "note": "https://planetdecred.org/chat/",
+    "path": "matrix/matrix.planetdecred.org",
+    "url": "matrix.planetdecred.org"
+  },
+  {
+    "path": "medium.com/Ammarooni",
+    "tags": ["personal"],
+    "url": "https://medium.com/@Ammarooni"
+  },
+  {
+    "path": "medium.com/_Checkmatey_",
+    "tags": ["personal"],
+    "url": "https://medium.com/@_Checkmatey_"
+  },
+  {
+    "path": "medium.com/decred",
+    "url": "https://medium.com/decred"
+  },
+  {
+    "path": "medium.com/decreddrive",
+    "url": "https://medium.com/@decreddrive"
+  },
+  {
+    "path": "medium.com/permabullnino",
+    "tags": ["personal"],
+    "url": "https://medium.com/@permabullnino"
+  },
+  {
+    "path": "medium.com/politeia-digest",
+    "url": "https://medium.com/politeia-digest"
+  },
+  {
+    "path": "medium.com/richardred",
+    "tags": ["personal"],
+    "url": "https://medium.com/@richardred"
+  },
+  {
+    "note": "method of counting improved sometime before 2019-08-01",
+    "path": "politeia/proposals.decred.org",
+    "url": "https://proposals.decred.org"
+  },
+  {
+    "path": "reddit.com/DCR",
+    "url": "https://www.reddit.com/r/DCR/"
+  },
+  {
+    "path": "reddit.com/decred",
+    "url": "https://www.reddit.com/r/decred/"
+  },
+  {
+    "path": "slack.com/decred",
+    "url": "https://decred.slack.com"
+  },
+  {
+    "created_utc": "2021-03-10",
+    "path": "t.me/DCRann",
+    "url": "https://t.me/DCRann"
+  },
+  {
+    "path": "t.me/Decred",
+    "url": "https://t.me/Decred"
+  },
+  {
+    "path": "t.me/DecredAfrica",
+    "tags": ["regional"],
+    "url": "https://t.me/DecredAfrica"
+  },
+  {
+    "path": "t.me/DecredAgg",
+    "url": "https://t.me/DecredAgg"
+  },
+  {
+    "path": "t.me/DecredArg",
+    "tags": ["regional"],
+    "url": "https://t.me/DecredArg"
+  },
+  {
+    "path": "t.me/DecredES",
+    "tags": ["regional"],
+    "url": "https://t.me/DecredES"
+  },
+  {
+    "path": "t.me/DecredItalia",
+    "tags": ["regional"],
+    "url": "https://t.me/DecredItalia"
+  },
+  {
+    "path": "t.me/DecredSupport",
+    "url": "https://t.me/DecredSupport"
+  },
+  {
+    "path": "t.me/DecredTrading",
+    "url": "https://t.me/DecredTrading"
+  },
+  {
+    "path": "t.me/Decred_RU",
+    "tags": ["regional"],
+    "url": "https://t.me/Decred_RU"
+  },
+  {
+    "path": "t.me/dcrtktsplit",
+    "url": "https://t.me/dcrtktsplit"
+  },
+  {
+    "path": "t.me/decredES_devs",
+    "tags": ["regional"],
+    "url": "https://t.me/decredES_devs"
+  },
+  {
+    "path": "t.me/decred_cn",
+    "tags": ["regional"],
+    "url": "http://t.me/decred_cn"
+  },
+  {
+    "path": "t.me/decredarabia",
+    "tags": ["regional"],
+    "url": "https://t.me/decredarabia"
+  },
+  {
+    "path": "t.me/decredbr",
+    "tags": ["regional"],
+    "url": "https://t.me/decredbr"
+  },
+  {
+    "path": "t.me/decredvietnam",
+    "tags": ["regional"],
+    "url": "https://t.me/decredvietnam"
+  },
+  {
+    "created_utc": "2019-07-18",
+    "path": "twitter.com/BlockCommons",
+    "url": "https://twitter.com/BlockCommons"
+  },
+  {
+    "created_utc": "2020-02-21",
+    "path": "twitter.com/ConsensusRough",
+    "url": "https://twitter.com/ConsensusRough"
+  },
+  {
+    "created_utc": "2018-11-04",
+    "path": "twitter.com/DecredArabia",
+    "tags": ["regional"],
+    "url": "https://twitter.com/DecredArabia"
+  },
+  {
+    "created_utc": "2018-08-18",
+    "path": "twitter.com/DecredAustralia",
+    "tags": ["regional"],
+    "url": "https://twitter.com/DecredAustralia"
+  },
+  {
+    "created_utc": "2021-01-19",
+    "path": "twitter.com/DecredKorea",
+    "url": "https://twitter.com/DecredKorea"
+  },
+  {
+    "created_utc": "2021-01-16",
+    "path": "twitter.com/DecredNederland",
+    "url": "https://twitter.com/DecredNederland"
+  },
+  {
+    "created_utc": "2020-05-26",
+    "path": "twitter.com/DecredSociety",
+    "url": "https://twitter.com/DecredSociety"
+  },
+  {
+    "created_utc": "2018-02-03",
+    "path": "twitter.com/Decred_BR",
+    "tags": ["regional"],
+    "url": "https://twitter.com/Decred_BR"
+  },
+  {
+    "created_utc": "2018-06-13",
+    "path": "twitter.com/Decred_CA",
+    "tags": ["regional"],
+    "url": "https://twitter.com/Decred_CA"
+  },
+  {
+    "path": "twitter.com/Decred_ES",
+    "tags": ["regional"],
+    "url": "https://twitter.com/Decred_ES"
+  },
+  {
+    "path": "twitter.com/Decred_ITA",
+    "tags": ["regional"],
+    "url": "https://twitter.com/Decred_ITA"
+  },
+  {
+    "created_utc": "2010-06-27",
+    "path": "twitter.com/Decred_News",
+    "url": "https://twitter.com/Decred_News"
+  },
+  {
+    "created_utc": "2018-01-30",
+    "path": "twitter.com/Decred_PL",
+    "tags": ["regional"],
+    "url": "https://twitter.com/Decred_PL"
+  },
+  {
+    "path": "twitter.com/Decred_africa",
+    "tags": ["regional"],
+    "url": "https://twitter.com/Decred_africa"
+  },
+  {
+    "created_utc": "2019-08-10",
+    "note": "unofficial w.r.t. the Decred in Depth podcast, operated by @OfficialCryptos",
+    "path": "twitter.com/DecredinDepth",
+    "url": "https://twitter.com/DecredinDepth"
+  },
+  {
+    "created_utc": "2014-09-14",
+    "path": "twitter.com/NoahPierau",
+    "tags": ["personal"],
+    "url": "https://twitter.com/NoahPierau"
+  },
+  {
+    "created_utc": "2011-03-19",
+    "path": "twitter.com/PermabullNino",
+    "tags": ["personal"],
+    "url": "https://twitter.com/PermabullNino"
+  },
+  {
+    "created_utc": "2018-03-01",
+    "path": "twitter.com/RichardRed0x",
+    "tags": ["personal"],
+    "url": "https://twitter.com/RichardRed0x"
+  },
+  {
+    "created_utc": "2020-10-23",
+    "path": "twitter.com/StakeShuffle_",
+    "url": "https://twitter.com/StakeShuffle_"
+  },
+  {
+    "created_utc": "2018-01-12",
+    "path": "twitter.com/_Checkmatey_",
+    "tags": ["personal"],
+    "url": "https://twitter.com/_Checkmatey_"
+  },
+  {
+    "created_utc": "2013-02-10",
+    "path": "twitter.com/behindtext",
+    "tags": ["personal"],
+    "url": "https://twitter.com/behindtext"
+  },
+  {
+    "created_utc": "2019-12-30",
+    "path": "twitter.com/decreddrive",
+    "url": "https://twitter.com/decreddrive"
+  },
+  {
+    "created_utc": "2018-12-26",
+    "path": "twitter.com/decredexplorer",
+    "url": "https://twitter.com/decredexplorer"
+  },
+  {
+    "path": "twitter.com/decredproject",
+    "url": "https://twitter.com/decredproject"
+  },
+  {
+    "created_utc": "2011-09-12",
+    "past_url": "https://twitter.com/coveryfire7777",
+    "path": "twitter.com/exitusdcr",
+    "tags": ["personal"],
+    "url": "https://twitter.com/exitusdcr"
+  },
+  {
+    "created_utc": "2010-08-11",
+    "path": "twitter.com/jz_bz",
+    "tags": ["personal"],
+    "url": "https://twitter.com/jz_bz"
+  },
+  {
+    "created_utc": "2018-02-27",
+    "path": "twitter.com/lefebvre_dustin",
+    "tags": ["personal"],
+    "url": "https://twitter.com/lefebvre_dustin"
+  },
+  {
+    "created_utc": "2014-12-16",
+    "path": "twitter.com/lukebp_",
+    "tags": ["personal"],
+    "url": "https://twitter.com/lukebp_"
+  },
+  {
+    "created_utc": "2017-04-04",
+    "path": "twitter.com/michae2xl",
+    "tags": ["personal"],
+    "url": "https://twitter.com/michae2xl"
+  },
+  {
+    "path": "twitter.com/pi_crumbs",
+    "url": "https://twitter.com/pi_crumbs"
+  },
+  {
+    "created_utc": "2019-09-03",
+    "path": "twitter.com/planetdecred",
+    "url": "https://twitter.com/planetdecred"
+  },
+  {
+    "created_utc": "2020-09-14",
+    "path": "twitter.com/winatoms",
+    "url": "https://twitter.com/winatoms"
+  },
+  {
+    "created_utc": "2020-06-14",
+    "description": "Learn about Decred - a superior store of value. A community driven portal.",
+    "path": "twitter.com/withdecred",
+    "url": "https://twitter.com/withdecred"
+  },
+  {
+    "path": "vk.com/decred_project",
+    "url": "https://vk.com/decred_project"
+  },
+  {
+    "created_utc": "2020-05-27",
+    "name": "Decred Arabia",
+    "path": "youtube.com/decredarabia",
+    "tags": ["regional"],
+    "url": "https://www.youtube.com/channel/UCCtB2BfsA2VdT0FJXpsYICA"
+  },
+  {
+    "created_utc": "2018-02-06",
+    "name": "Decred Brasil Oficial",
+    "path": "youtube.com/decredbrazil",
+    "tags": ["regional"],
+    "url": "https://www.youtube.com/channel/UC73wa2ddXuPWsmenVfeFTYg"
+  },
+  {
+    "created_utc": "2017-04-06",
+    "name": "Decred",
+    "path": "youtube.com/decredchannel",
+    "url": "https://www.youtube.com/decredchannel"
+  },
+  {
+    "alt_urls": [
+      "https://www.youtube.com/user/PhoenixGreen24"
+    ],
+    "created_utc": "2008-05-29",
+    "name": "Society Decentralised",
+    "path": "youtube.com/decredsociety",
+    "url": "https://www.youtube.com/c/DecredSociety"
+  },
+  {
+    "created_utc": "2019-02-27",
+    "name": "Decred en Espa\u00f1ol",
+    "path": "youtube.com/decredspanish",
+    "tags": ["regional"],
+    "url": "https://www.youtube.com/channel/UCCprOo4gR1vsjJTAzv8BMBQ"
+  }
+]
