@@ -5,6 +5,7 @@
 import os
 import csv
 import json
+from collections import namedtuple
 from datetime import datetime, timezone
 from functools import partial
 from itertools import chain
@@ -13,9 +14,10 @@ import time
 
 
 class Config:
-    data_dir            = "data/data"
-    export_filename     = "export.csv"
-    account_filename    = "profile.json"
+    data_root_path          = "data"
+    default_coll_data_path  = "data/accounts"
+    default_coll_meta_path  = "data/accounts.json"
+    export_filename         = "export.csv"
 
 
 class Const:
@@ -198,42 +200,73 @@ def cmd_view(args):
         validate(fp, view=True, limit=int_limit)
 
 
+# Path-related terminology used below is better explained in one place:
+# 
+# - collection - a set of data of (mostly) the same type and structure.
+#   Currently, tsu can only handle a collection that is a hierarchy of
+#   time series files.
+# - rpath - real path to a file or directory, used to read/write data
+#   on the file system.
+# - icpath - "in-collection path" that is relative to the collection
+#   directory. icpaths are used to derive metadata and also in various
+#   lists for mass-processing accounts and metrics. These paths are very
+#   local by design for greater flexibility, i.e. they don't hardcode a
+#   collection they are included in.
+# - account - a group of metrics, plus account-wide metadata common for
+#   all metrics.
+# - account meta - information that helps to track and process account's
+#   metrics, like account's URL, creation date, tags, etc.
+# - account path - icpath where account's metrics are stored.
+# - metric - a *single* value we track for the account. Keeping each
+#   metric in its own time series makes them simple and composable.
+# - metric meta - information that helps to work with the metric. Most
+#   importantly it is the account the metric belongs to, which in turn
+#   allows to load account meta to capture new values.
+
+
+MetricMeta = namedtuple("MetricMeta", [
+    "platform",
+    "account",
+    "account_path",
+    "metric",
+])
+
+
 def cmd_latest(args):
-    metric_paths = load_list(args.metriclist)
-    if not metric_paths:
+    coll_data_root = args.colldata
+
+    metric_icpaths = load_list(args.metriclist)
+    if not metric_icpaths:
         return
+
     metfmt = "{:20}|{:24}|{:24}"
     headerfmt = metfmt + "|{:20}|{:7}"
     print(headerfmt.format("platform", "account", "metric", "date", "value"))
     print("{:-<20}|{:-<24}|{:-<24}|{:-<20}|{:-<7}".format("", "", "", "", ""))
-    for mp in metric_paths:
-        if not os.path.isfile(mp):
-            warn("not a file: {}", mp)
+
+    for met_icpath in metric_icpaths:
+        # resolve met_icpath against the collection to get the real path
+        met_rpath = os.path.join(coll_data_root, met_icpath)
+        if not os.path.isfile(met_rpath):
+            warn("not a file: {}", met_rpath)
             continue
-        rows = list(csv_iter(mp))
+        rows = list(csv_iter(met_rpath))
         if len(rows) < 1:
-            warn("no data: {}", mp)
+            warn("no data: {}", met_rpath)
             continue
-        valtype = value_type(mp)
+        valtype = value_type(met_rpath)
         last_dt, last_val = parse_record(rows[-1], valtype)
-        attrs = metric_attrs(mp)
-        if attrs:
-            metstr = metfmt.format(*attrs)
+        mm = metric_meta(met_icpath)
+        if mm:
+            metstr = metfmt.format(mm.platform, mm.account, mm.metric)
         else:
-            metstr = "{:68}".format(mp)
+            metstr = "{:68}".format(met_icpath)
         print("{}|{:20}|{:>7,}".format(metstr, str(last_dt), last_val))
 
 
 def cmd_list_accounts(args):
-    root = Config.data_dir
-
-    # if the directory contains the account descriptor, it is an account
-    acc_files = file_paths_sorted(root,
-        pred=lambda fname: fname == Config.account_filename)
-    acc_dirs = list(map(os.path.dirname, acc_files))
-
-    for ad in acc_dirs:
-        print(ad)
+    for acc in load_json(args.collmeta):
+        print(acc["path"])
 
 
 def cmd_validate(args):
@@ -254,77 +287,87 @@ def strip_prefix(s, p):
         return s
 
 
-def load_acc_meta(dirpath):
-    apath = os.path.join(dirpath, Config.account_filename)
-    if os.path.exists(apath):
-        return load_json(apath)
-    else:
-        return None
+def index_list(list, key):
+    res = {}
+    for item in list:
+        ik = item.get(key)
+        if ik is None:
+            raise TsuError("missing value for key '{}'".format(key))
+        if ik in res:
+            raise TsuError("duplicate value '{}' for key '{}'".format(ik, key))
+        res[ik] = item
+    return res
 
 
-def metric_attrs(path):
-    prefix = Config.data_dir + os.sep
-    if not path.startswith(prefix):
-        # didn't consider this case thoroughly
-        return None
-    innerpath = strip_prefix(path, prefix)
-    parts = innerpath.split(os.sep)
+def metric_meta(metric_icpath):
+    # Example: `github.com/decred/dcrd/forks.csv`
+    # Here `github.com` is the platform, `decred/dcrd` is the account,
+    # and `forks` is the metric.
+    # Therefore, `metric_icpath` normally has 3 parts (minimum), 4 for
+    # two-level accounts like on github.com, and possibly more.
+    # Metric in-collection path MUST be relative to collection data dir,
+    # i.e. must not include any parts above platform, i.e. must not be
+    # concerned in what collection it is placed.
+
+    # todo: test how `/` in metric paths would work on Windows
+    parts = metric_icpath.split("/")
     valid = len(parts) >= 3
     if not valid:
         return None
-    # platform is the first path component under Config.data_dir
-    # account is 1+ path components under platform, except the last one
-    platform, *account, metric_ext = parts
-    account_str = "/".join(account)
-    # metric name is the file name without extension
-    metric = os.path.splitext(metric_ext)[0]
-    return platform, account_str, metric
+    plat, *acc_parts, met_filename = parts
+    acc = "/".join(acc_parts)
+    acc_path = plat + "/" + acc
+    # metric name is the filename without extension
+    met = os.path.splitext(met_filename)[0]
+    return MetricMeta(
+        platform=plat, account=acc, account_path=acc_path, metric=met)
 
 
-def export_append_rows(rows, fpath):
-    if value_type(fpath) is None:
-        warn("exporting from unknown file type: {}", fpath)
+def export_append_rows(rows, met_rpath, met_meta, acc_meta):
+    if value_type(met_rpath) is None:
+        warn("exporting from unknown file type: {}", met_rpath)
 
-    # Return True if data was exported from fpath into rows, False if
-    # skipped.
-    attrs = metric_attrs(fpath)
-    if not attrs:
-        warn("could not derive (platform, account, metric), skipping path: {}",
-             fpath)
-        return False
-
-    platform, account, metric = attrs
     tags = ""
-    acc_meta = load_acc_meta(os.path.dirname(fpath))
-    if acc_meta and ("tags" in acc_meta):
-        tags = " ".join(acc_meta["tags"])
-    for ts, val in csv_iter(fpath):
-        rows.append((ts, platform, account, metric, val, tags))
-    return True
+    if acc_meta:
+        if "tags" in acc_meta:
+            tags = " ".join(acc_meta["tags"])
+    else:
+        warn("missing metadata for account path: {}", met_meta.account_path)
+
+    for ts, val in csv_iter(met_rpath):
+        rows.append((ts, met_meta.platform, met_meta.account, met_meta.metric,
+                     val, tags))
 
 
-def export_csv(roots, outname):
+def export_csv(coll_data_root, coll_meta, export_icpaths, outname):
     rows = []
-    exported_paths = 0
+    exported_files = 0
     skipped_paths = 0
 
-    for root in roots:
+    for export_icpath in export_icpaths:
+        # resolve the in-collection path with its data dir
+        rpath = os.path.join(coll_data_root, export_icpath)
         # if any path explicitly specified by the user is a file, try
         # exporting it regardless of its type
         # otherwise, filter the walked (discovered indirectly) paths
         # and only take time series files with numeric values
-        for fp in file_paths_sorted(root, pred=is_numeric_type,
-                                    filter_root=False, error=False):
-            ok = export_append_rows(rows, fp)
-            if ok:
-                exported_paths += 1
-            else:
+        for met_rpath in file_paths_sorted(rpath, pred=is_numeric_type,
+                                           filter_root=False, error=False):
+            met_icpath = strip_prefix(met_rpath, coll_data_root + os.sep)
+            met_meta = metric_meta(met_icpath)
+            if not met_meta:
+                warn("could not derive metric meta, skipping path: {}",
+                     met_rpath)
                 skipped_paths += 1
+                continue # for met_rpath ...
+            acc_meta = coll_meta[met_meta.account_path]
+            export_append_rows(rows, met_rpath, met_meta, acc_meta)
+            exported_files += 1
 
     # sort by timestamp (first row cell), in-place
     rows.sort()
     print("exporting {} data points from {} files (skipped {} paths)"
-          "".format(len(rows), exported_paths, skipped_paths))
+          "".format(len(rows), exported_files, skipped_paths))
 
     header = ("timestamp", "platform", "account", "metric", "value", "tags")
 
@@ -334,17 +377,29 @@ def export_csv(roots, outname):
 
 
 def cmd_export_csv(args):
+    # try loading the meta to possibly trigger FileNotFoundError earlier
+    coll_meta = load_json(args.collmeta)
+    coll_meta_indexed = index_list(coll_meta, key="path")
+
     pathlist = args.pathlist
-
     if pathlist:
-        roots = load_list(pathlist)
-        print("exporting {} paths listed in: {}".format(len(roots), pathlist))
+        # pathlist items MUST be relative to the collection data dir
+        export_paths = load_list(pathlist)
+        print("exporting {} paths listed in: {}"
+              "".format(len(export_paths), pathlist))
     else:
+        # for the user the most intuitive thing is to tab-complete a
+        # real file system path and pass it as the `path` argument,
+        # without ever thinking about our icpath/rpath magic.
+        # therefore, we must convert user-specified path (rpath) to one
+        # that is properly based off the collection data dir (icpath)
+        # todo: normalize path passed via CLI into an in-collection path
+        warn("make sure path is relative to the collection or use --pathlist!")
         path = args.path
-        roots = [path]
-        print("exporting all paths under:", path)
+        export_paths = [path]
+        print("exporting all metrics under:", path)
 
-    export_csv(roots, args.output)
+    export_csv(args.colldata, coll_meta_indexed, export_paths, args.output)
 
 
 def load_json(path):
@@ -362,8 +417,7 @@ def replace_url(url):
     return url
 
 
-def make_hint(dirpath, default_hint):
-    acc_meta = load_acc_meta(dirpath)
+def make_hint(acc_meta, default_hint):
     hint = ""
     if acc_meta:
         if "name" in acc_meta:
@@ -512,26 +566,24 @@ def identity(x):
     return x
 
 
-def make_prompt_prefix(path):
-    attrs = metric_attrs(path)
-    if not attrs:
-        warn("could not determine account/metric for: {}", path)
+def make_prompt_prefix(met_meta, met_rpath):
+    if not met_meta:
+        warn("could not derive metric meta for: {}", met_rpath)
         return "n/a"
-    _, account, metric = attrs
-    return account + "/" + metric
+    return met_meta.account + "/" + met_meta.metric
 
 
-def entry_file(path):
-    dirpath, filename = os.path.split(path)
+def entry_file(met_rpath, met_meta, acc_meta):
+    _, filename = os.path.split(met_rpath)
 
-    prompt_prefix = make_prompt_prefix(path) + ": "
+    prompt_prefix = make_prompt_prefix(met_meta, met_rpath) + ": "
     printer = lambda s: print(prompt_prefix + s)
 
-    hint = make_hint(dirpath, filename)
+    hint = make_hint(acc_meta, default_hint=filename)
     printer("capture the value for " + hint)
 
     valtype = value_type(filename)
-    rows = list(csv_iter(path)) # read all to get the length
+    rows = list(csv_iter(met_rpath)) # read all to get the length
     last_dt, last_val = None, None
     if len(rows) > 0:
         last_dt, last_val = parse_record(rows[-1], valtype)
@@ -574,14 +626,22 @@ def entry_file(path):
 
     ts = int(dt.replace(tzinfo=timezone.utc).timestamp())
     rows.append((ts, val))
-    write_csv(path, rows)
+    write_csv(met_rpath, rows)
     printer("saved: time {}, value {}{}".format(dt, val, delta))
 
 
-def entry_path(root):
-    for fp in file_paths_sorted(root, pred=is_numeric_type,
-                                filter_root=True, error=False):
-        entry_file(fp)
+def entry_path(coll_data_root, coll_meta, entry_icpath):
+    # resolve the in-collection path with its data dir
+    entry_rpath = os.path.join(coll_data_root, entry_icpath)
+    # unlike the other places, here we DO filter the root path.
+    # if it is a file, and not of a numeric type, we won't know how to
+    # properly add data to it
+    for met_rpath in file_paths_sorted(entry_rpath, pred=is_numeric_type,
+                                       filter_root=True, error=False):
+        met_icpath = strip_prefix(met_rpath, coll_data_root + os.sep)
+        met_meta = metric_meta(met_icpath)
+        acc_meta = coll_meta[met_meta.account_path]
+        entry_file(met_rpath, met_meta, acc_meta)
 
 
 def cmd_entry(args):
@@ -605,12 +665,22 @@ def cmd_entry(args):
     print("Interactive data entry mode. Make sure your system clock is accurate.")
     print("Your system UTC time is:",
           format(datetime.utcfromtimestamp(int(time.time()))))
+
+    # try loading the meta to possibly trigger FileNotFoundError earlier
+    coll_meta = load_json(args.collmeta)
+    coll_meta_indexed = index_list(coll_meta, "path")
+
     pathlist = args.pathlist
     if pathlist:
-        for path in load_list(pathlist):
-            entry_path(path)
+        # pathlist items MUST be relative to the collection data dir
+        paths = load_list(pathlist)
     else:
-        entry_path(args.path)
+        # todo: normalize path passed via CLI into an in-collection path
+        warn("make sure path is relative to the collection or use --pathlist!")
+        paths = [args.path]
+
+    for path in paths:
+        entry_path(args.colldata, coll_meta_indexed, path)
 
 
 def make_arg_parser():
@@ -620,11 +690,27 @@ def make_arg_parser():
     parser = argparse.ArgumentParser(
         description=("time series utility. The following file types are"
                      " supported: " + file_types_str))
+
+    # -m and -d mean that only ONE collection can be handled at a time
+
+    parser.add_argument(
+        "-m", "--collmeta",
+        default=Config.default_coll_meta_path,
+        help="path to collection metadata JSON file (default: {})"
+             "".format(Config.default_coll_meta_path))
+
+    parser.add_argument(
+        "-d", "--colldata",
+        default=Config.default_coll_data_path,
+        help="path to collection data directory (default: {})"
+             "".format(Config.default_coll_data_path))
+
     subparsers = parser.add_subparsers(dest="command", title="commands")
 
     listaccs = subparsers.add_parser(
         "listaccs", aliases=["la"],
-        help="list accounts in the data directory")
+        help="list accounts in the JSON metadata file. -m is required if its"
+             " default does not exist.")
     listaccs.set_defaults(func=cmd_list_accounts)
 
     validate = subparsers.add_parser(
@@ -632,7 +718,7 @@ def make_arg_parser():
         help="validate time series files")
     validate.add_argument(
         "path", nargs="?",
-        default=Config.data_dir,
+        default=Config.data_root_path,
         help="path to search time series files")
     validate.set_defaults(func=cmd_validate)
 
@@ -649,23 +735,25 @@ def make_arg_parser():
 
     latest = subparsers.add_parser(
         "latest",
-        help="print latest values for metrics listed in a file")
+        help="print latest values for metrics listed in a file. -d is required"
+             " if its default does not exist.")
     latest.add_argument(
         "metriclist",
-        help="list file with metric files, one per line")
+        help="list file with metric files to report, one per line")
     latest.set_defaults(func=cmd_latest)
 
     export = subparsers.add_parser(
         "export",
-        help="export data into a single CSV file",
+        help="export data into a single CSV file. -m and -d are required if"
+             " their defaults do not exist.",
         description=("Export data from arbitrary tree of time series files"
                      " into a single file (" + Config.export_filename +
                      " by default), overwriting it."))
     export_src = export.add_mutually_exclusive_group(required=True)
     export_src.add_argument(
         "path", nargs="?",
-        default=Config.data_dir,
-        help="path to search time series files in")
+        default=Config.default_coll_data_path,
+        help="path to export data points from")
     export_src.add_argument(
         "-p", "--pathlist",
         help="list file with paths to export data points from, one per line")
@@ -677,15 +765,16 @@ def make_arg_parser():
 
     entry = subparsers.add_parser(
         "entry", aliases=["e"],
-        help="enter data manually",
+        help="enter data manually. -m and -d are required if their defaults"
+             " do not exist",
         description=cmd_entry.__doc__)
     entry_target = entry.add_mutually_exclusive_group(required=True)
     entry_target.add_argument(
         "path", nargs="?",
-        default=Config.data_dir,
+        default=Config.default_coll_data_path,
         help="file or directory path to enter data in; if directory, the"
-             " program will prompt data entry for each time series file found"
-             " in it")
+             " program will prompt for data entry for each time series file"
+             " found in it")
     entry_target.add_argument(
         "-p", "--pathlist",
         help="list file with paths to enter data in, one path per line")
