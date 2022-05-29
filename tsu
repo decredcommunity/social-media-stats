@@ -17,7 +17,7 @@ class Config:
     data_root_path          = "data"
     default_coll_data_path  = "data/accounts"
     default_coll_meta_path  = "data/accounts.json"
-    export_filename         = "export.csv"
+    export_outpath         = "export.csv"
 
 
 class Const:
@@ -208,9 +208,10 @@ def cmd_view(args):
 # - rpath - real path to a file or directory, used to read/write data
 #   on the file system.
 # - icpath - "in-collection path" that is relative to the collection
-#   directory. icpaths are used to derive metadata and also in various
-#   lists for mass-processing accounts and metrics. These paths are very
-#   local by design for greater flexibility, i.e. they don't hardcode a
+#   directory and always uses slash `/` as path separator. icpaths are
+#   used to derive metadata and also in various lists for
+#   mass-processing accounts and metrics. These paths are very local by
+#   design for greater flexibility, i.e. they don't hardcode a
 #   collection they are included in.
 # - account - a group of metrics, plus account-wide metadata common for
 #   all metrics.
@@ -280,13 +281,6 @@ def load_list(path):
         return [line.rstrip("\n") for line in f]
 
 
-def strip_prefix(s, p):
-    if s.startswith(p):
-        return s[len(p):]
-    else:
-        return s
-
-
 def index_list(list, key):
     res = {}
     for item in list:
@@ -339,7 +333,7 @@ def export_append_rows(rows, met_rpath, met_meta, acc_meta):
                      val, tags))
 
 
-def export_csv(coll_data_root, coll_meta, export_icpaths, outname):
+def export_csv(coll_data_root, coll_meta, export_icpaths, outpath):
     rows = []
     exported_files = 0
     skipped_paths = 0
@@ -353,7 +347,7 @@ def export_csv(coll_data_root, coll_meta, export_icpaths, outname):
         # and only take time series files with numeric values
         for met_rpath in file_paths_sorted(rpath, pred=is_numeric_type,
                                            filter_root=False, error=False):
-            met_icpath = strip_prefix(met_rpath, coll_data_root + os.sep)
+            met_icpath = os.path.relpath(met_rpath, coll_data_root)
             met_meta = metric_meta(met_icpath)
             if not met_meta:
                 warn("could not derive metric meta, skipping path: {}",
@@ -372,8 +366,8 @@ def export_csv(coll_data_root, coll_meta, export_icpaths, outname):
     header = ("timestamp", "platform", "account", "metric", "value", "tags")
 
     # overwrite existing file
-    write_csv(outname, chain([header], rows))
-    print("file saved:", outname)
+    write_csv(outpath, chain([header], rows))
+    print("file saved:", outpath)
 
 
 def cmd_export_csv(args):
@@ -399,7 +393,7 @@ def cmd_export_csv(args):
         export_paths = [path]
         print("exporting all metrics under:", path)
 
-    export_csv(args.colldata, coll_meta_indexed, export_paths, args.output)
+    export_csv(args.colldata, coll_meta_indexed, export_paths, args.outpath)
 
 
 def load_json(path):
@@ -441,8 +435,8 @@ class InputCancel(SpecialValue):
 def optional_input(prompt, input):
     """Read a string, cancel if blank line entered twice.
 
-    Use the passed input function for reading. Return a value or an
-    InputCancel instance to signal cancellation by the user.
+    Use the passed input function for reading. Return an InputCancel
+    instance to signal cancellation by the user.
     """
     try:
         s = input(prompt)
@@ -465,6 +459,11 @@ class TimestampCommand(Command):
 
 
 def command_input(prompt, input):
+    """Read a string and optionally map it to a Command instance.
+
+    Use the passed input function for reading. If the read value starts
+    with colon (:), translate it to an appropriate Command instance.
+    """
     inp = input(prompt)
     if isinstance(inp, str) and inp.startswith(":"):
         if inp == ":t":
@@ -476,16 +475,19 @@ def command_input(prompt, input):
 
 
 def confirmed_input(prompt, confirm_prompt, input):
-    """Read inputs until two subsequent inputs match, cancel on blank input.
+    """Read inputs until two subsequent inputs match.
 
-    If user cancels input, return what optional_input returned.
+    Use the passed input function for reading. If the input function
+    returns a SpecialValue instance, return it as is without a
+    confirmation input.
     """
     inp = input(prompt)
     if isinstance(inp, SpecialValue):
         return inp
 
     prev = inp
-    # keep collecting inputs until (a) two inputs match or (b) input is canceled
+    # keep collecting inputs until (a) two inputs match OR (b) input is
+    # canceled
     while True:
         cur = input(confirm_prompt)
         if (cur == prev) or isinstance(cur, SpecialValue):
@@ -542,13 +544,18 @@ def datetime_greater(other):
 
 
 def make_input(prefix, typedesc, converter, printer):
+    # Use function composition to build a powerful input function.
+    # Simpler input functions will run (and handle user's input) in the
+    # following order: optional_input -> command_input ->
+    # validated_input -> confirmed_input.
     cancelable = partial(optional_input, input=input)
     command = partial(command_input, input=cancelable)
     validated = partial(validated_input, converter=converter, printer=printer,
                         input=command)
-    initial_prompt = prefix + "enter {} value: ".format(typedesc)
+    prompt = prefix + "enter {} value: ".format(typedesc)
     confirm_prompt = prefix + "confirm {} value: ".format(typedesc)
-    return partial(confirmed_input, initial_prompt, confirm_prompt, validated)
+    confirmed = partial(confirmed_input, prompt, confirm_prompt, validated)
+    return confirmed
 
 
 def timestamp_input(prefix, min_ts, printer):
@@ -567,15 +574,16 @@ def identity(x):
 
 
 def make_prompt_prefix(met_meta):
-    if not met_meta:
-        return "n/a"
-    return met_meta.account + "/" + met_meta.metric
+    prefix = "n/a"
+    if met_meta:
+        prefix = met_meta.account + "/" + met_meta.metric
+    return prefix + ": "
 
 
 def entry_file(met_rpath, met_meta, acc_meta):
     _, filename = os.path.split(met_rpath)
 
-    prompt_prefix = make_prompt_prefix(met_meta) + ": "
+    prompt_prefix = make_prompt_prefix(met_meta)
     printer = lambda s: print(prompt_prefix + s)
 
     hint = make_hint(acc_meta, default_hint=filename)
@@ -596,6 +604,7 @@ def entry_file(met_rpath, met_meta, acc_meta):
     elif valtype == str:
         input = make_input(prompt_prefix, "string", identity, printer)
     else:
+        # use Exception over TsuError to force traceback printing
         raise Exception("unexpected value type: " + str(valtype))
 
     dt_custom = None
@@ -613,6 +622,7 @@ def entry_file(met_rpath, met_meta, acc_meta):
             elif isinstance(dt_inp, InputCancel):
                 printer("timestamp entry canceled")
         elif isinstance(inp, SpecialValue):
+            # use Exception over TsuError to force traceback printing
             raise Exception("unexpected SpecialValue: " + str(inp))
         else:
             val = inp
@@ -637,7 +647,7 @@ def entry_path(coll_data_root, coll_meta, entry_icpath):
     # properly add data to it
     for met_rpath in file_paths_sorted(entry_rpath, pred=is_numeric_type,
                                        filter_root=True, error=False):
-        met_icpath = strip_prefix(met_rpath, coll_data_root + os.sep)
+        met_icpath = os.path.relpath(met_rpath, coll_data_root)
         met_meta = metric_meta(met_icpath)
         acc_meta = None
         if met_meta:
@@ -665,10 +675,6 @@ def cmd_entry(args):
 
     To quit the data entry session, hit Ctrl-C.
     """
-    print("Interactive data entry mode. Make sure your system clock is accurate.")
-    print("Your system UTC time is:",
-          format(datetime.utcfromtimestamp(int(time.time()))))
-
     # try loading the meta to possibly trigger FileNotFoundError earlier
     coll_meta = load_json(args.collmeta)
     coll_meta_indexed = index_list(coll_meta, "path")
@@ -681,6 +687,10 @@ def cmd_entry(args):
         # todo: normalize path passed via CLI into an in-collection path
         warn("make sure path is relative to the collection or use --pathlist!")
         paths = [args.path]
+
+    print("Interactive data entry mode. Make sure your system clock is accurate.")
+    print("Your system UTC time is:",
+          format(datetime.utcfromtimestamp(int(time.time()))))
 
     for path in paths:
         entry_path(args.colldata, coll_meta_indexed, path)
@@ -750,7 +760,7 @@ def make_arg_parser():
         help="export data into a single CSV file. -m and -d are required if"
              " their defaults do not exist.",
         description=("Export data from arbitrary tree of time series files"
-                     " into a single file (" + Config.export_filename +
+                     " into a single file (" + Config.export_outpath +
                      " by default), overwriting it."))
     export_src = export.add_mutually_exclusive_group(required=True)
     export_src.add_argument(
@@ -761,9 +771,9 @@ def make_arg_parser():
         "-p", "--pathlist",
         help="list file with paths to export data points from, one per line")
     export.add_argument(
-        "--output",
-        default=Config.export_filename,
-        help="file name to save")
+        "--outpath",
+        default=Config.export_outpath,
+        help="file path to save")
     export.set_defaults(func=cmd_export_csv)
 
     entry = subparsers.add_parser(
