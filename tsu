@@ -566,9 +566,8 @@ def identity(x):
     return x
 
 
-def make_prompt_prefix(met_meta, met_rpath):
+def make_prompt_prefix(met_meta):
     if not met_meta:
-        warn("could not derive metric meta for: {}", met_rpath)
         return "n/a"
     return met_meta.account + "/" + met_meta.metric
 
@@ -576,7 +575,7 @@ def make_prompt_prefix(met_meta, met_rpath):
 def entry_file(met_rpath, met_meta, acc_meta):
     _, filename = os.path.split(met_rpath)
 
-    prompt_prefix = make_prompt_prefix(met_meta, met_rpath) + ": "
+    prompt_prefix = make_prompt_prefix(met_meta) + ": "
     printer = lambda s: print(prompt_prefix + s)
 
     hint = make_hint(acc_meta, default_hint=filename)
@@ -640,7 +639,11 @@ def entry_path(coll_data_root, coll_meta, entry_icpath):
                                        filter_root=True, error=False):
         met_icpath = strip_prefix(met_rpath, coll_data_root + os.sep)
         met_meta = metric_meta(met_icpath)
-        acc_meta = coll_meta[met_meta.account_path]
+        acc_meta = None
+        if met_meta:
+            acc_meta = coll_meta[met_meta.account_path]
+        else:
+            warn("could not derive metric meta for: {}", met_rpath)
         entry_file(met_rpath, met_meta, acc_meta)
 
 
