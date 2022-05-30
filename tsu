@@ -226,10 +226,11 @@ def cmd_view(args):
 
 
 MetricMeta = namedtuple("MetricMeta", [
+    "rpath",
+    "name",
     "platform",
     "account",
     "account_path",
-    "metric",
     "account_meta",
 ])
 
@@ -258,9 +259,9 @@ def cmd_latest(args):
             continue
         valtype = value_type(met_rpath)
         last_dt, last_val = parse_record(rows[-1], valtype)
-        mm = metric_meta(met_icpath)
+        mm = metric_meta(met_rpath, met_icpath)
         if mm:
-            metstr = metfmt.format(mm.platform, mm.account, mm.metric)
+            metstr = metfmt.format(mm.platform, mm.account, mm.name)
         else:
             metstr = "{:68}".format(met_icpath)
         print("{}|{:20}|{:>7,}".format(metstr, str(last_dt), last_val))
@@ -294,36 +295,45 @@ def index_list(list, key):
     return res
 
 
-def metric_meta(metric_icpath, coll_meta=None):
-    # Example: `github.com/decred/dcrd/forks.csv`
+def metric_meta(rpath, icpath, coll_meta=None):
+    # to have met_name in more cases, take it from rpath and not from
+    # icpath
+    _dirname, filename = os.path.split(rpath)
+    met_name, _ext = os.path.splitext(filename)
+
+    # Example `icpath`: `github.com/decred/dcrd/forks.csv`
     # Here `github.com` is the platform, `decred/dcrd` is the account,
     # and `forks` is the metric.
-    # Therefore, `metric_icpath` normally has 3 parts (minimum), 4 for
+    # Therefore, `icpath` normally has 3 parts (minimum), 4 for
     # two-level accounts like on github.com, and possibly more.
-    # Metric in-collection path MUST be relative to collection data dir,
-    # i.e. must not include any parts above platform, i.e. must not be
-    # concerned in what collection it is placed.
+    # icpath MUST only use `/` path separator and MUST be relative to
+    # collection data dir, i.e. must not include any parts above
+    # platform, i.e. not be concerned in what collection it is placed.
 
-    # todo: test how `/` in metric paths would work on Windows
-    parts = metric_icpath.split("/")
-    valid = len(parts) >= 3
-    if not valid:
-        return None
-    plat, *acc_parts, met_filename = parts
-    acc = "/".join(acc_parts)
-    acc_path = plat + "/" + acc
-    # metric name is the filename without extension
-    met = os.path.splitext(met_filename)[0]
+    plat, acc, acc_path = None, None, None
+    if icpath is not None:
+        # todo: test how `/` in metric paths would work on Windows
+        parts = icpath.split("/")
+        icpath_valid = len(parts) >= 3
+        if icpath_valid:
+            plat, *acc_parts, _filename = parts
+            acc = "/".join(acc_parts)
+            acc_path = plat + "/" + acc
+        else:
+            warn("icpath was given but it has <= 3 parts: {}", icpath)
+
     acc_meta = None
-    if coll_meta is not None:
+    if (coll_meta is not None) and (acc_path is not None):
         acc_meta = coll_meta[acc_path]
-    return MetricMeta(platform=plat, account=acc, account_path=acc_path,
-                      metric=met, account_meta=acc_meta)
+
+    return MetricMeta(rpath=rpath, name=met_name,
+                      platform=plat, account=acc, account_path=acc_path,
+                      account_meta=acc_meta)
 
 
-def export_append_rows(rows, met_rpath, met_meta):
-    if value_type(met_rpath) is None:
-        warn("exporting from unknown file type: {}", met_rpath)
+def export_append_rows(rows, met_meta):
+    if value_type(met_meta.rpath) is None:
+        warn("exporting from unknown file type: {}", met_meta.rpath)
 
     tags = ""
     acc_meta = met_meta.account_meta
@@ -331,10 +341,10 @@ def export_append_rows(rows, met_rpath, met_meta):
         if "tags" in acc_meta:
             tags = " ".join(acc_meta["tags"])
     else:
-        warn("missing metadata for account path: {}", met_meta.account_path)
+        warn("missing account meta for acc path: {}", met_meta.account_path)
 
-    for ts, val in csv_iter(met_rpath):
-        rows.append((ts, met_meta.platform, met_meta.account, met_meta.metric,
+    for ts, val in csv_iter(met_meta.rpath):
+        rows.append((ts, met_meta.platform, met_meta.account, met_meta.name,
                      val, tags))
 
 
@@ -353,13 +363,12 @@ def export_csv(coll_data_root, coll_meta, export_icpaths, outpath):
         for met_rpath in file_paths_sorted(rpath, pred=is_numeric_type,
                                            filter_root=False, error=False):
             met_icpath = os.path.relpath(met_rpath, coll_data_root)
-            met_meta = metric_meta(met_icpath, coll_meta)
-            if not met_meta:
-                warn("could not derive metric meta, skipping path: {}",
-                     met_rpath)
+            met_meta = metric_meta(met_rpath, met_icpath, coll_meta)
+            if (not met_meta.platform) or (not met_meta.account):
+                warn("unknown platform/account, skipping path: {}", met_rpath)
                 skipped_paths += 1
                 continue # for met_rpath ...
-            export_append_rows(rows, met_rpath, met_meta)
+            export_append_rows(rows, met_meta)
             exported_files += 1
 
     # sort by timestamp (first row cell), in-place
@@ -417,7 +426,7 @@ def replace_url(url):
 
 def make_hint(met_meta, default_hint):
     hint = ""
-    acc_meta = met_meta.account_meta if met_meta else None
+    acc_meta = met_meta.account_meta
     if acc_meta:
         if "name" in acc_meta:
             hint += '"' + acc_meta["name"] + '"'
@@ -579,23 +588,23 @@ def identity(x):
 
 
 def make_prompt_prefix(met_meta):
-    prefix = "n/a"
-    if met_meta:
-        prefix = met_meta.account + "/" + met_meta.metric
+    prefix = met_meta.name
+    if met_meta.account:
+        prefix = met_meta.account + "/" + met_meta.name
     return prefix + ": "
 
 
-def entry_file(met_rpath, met_meta):
-    _, filename = os.path.split(met_rpath)
+def entry_file(met_meta):
+    _dir, filename = os.path.split(met_meta.rpath)
 
     prompt_prefix = make_prompt_prefix(met_meta)
     printer = lambda s: print(prompt_prefix + s)
 
-    hint = make_hint(met_meta, default_hint=filename)
+    hint = make_hint(met_meta, default_hint=met_meta.rpath)
     printer("capture the value for " + hint)
 
     valtype = value_type(filename)
-    rows = list(csv_iter(met_rpath)) # read all to get the length
+    rows = list(csv_iter(met_meta.rpath)) # read all to get the length
     last_dt, last_val = None, None
     if len(rows) > 0:
         last_dt, last_val = parse_record(rows[-1], valtype)
@@ -640,12 +649,12 @@ def entry_file(met_rpath, met_meta):
 
     ts = int(dt.replace(tzinfo=timezone.utc).timestamp())
     rows.append((ts, val))
-    write_csv(met_rpath, rows)
+    write_csv(met_meta.rpath, rows)
     printer("saved: time {}, value {}{}".format(dt, val, delta))
 
 
-def entry_path(coll_data_root, coll_meta, entry_icpath):
-    # resolve the in-collection path with its data dir
+def entry_path(entry_icpath, coll_data_root, coll_meta):
+    # resolve the in-collection path with collection data dir
     entry_rpath = os.path.join(coll_data_root, entry_icpath)
     # unlike the other places, here we DO filter the root path.
     # if it is a file, and not of a numeric type, we won't know how to
@@ -653,10 +662,8 @@ def entry_path(coll_data_root, coll_meta, entry_icpath):
     for met_rpath in file_paths_sorted(entry_rpath, pred=is_numeric_type,
                                        filter_root=True, error=False):
         met_icpath = os.path.relpath(met_rpath, coll_data_root)
-        met_meta = metric_meta(met_icpath, coll_meta)
-        if not met_meta:
-            warn("could not derive metric meta for: {}", met_rpath)
-        entry_file(met_rpath, met_meta)
+        met_meta = metric_meta(met_rpath, met_icpath, coll_meta)
+        entry_file(met_meta)
 
 
 def cmd_entry(args):
@@ -695,7 +702,7 @@ def cmd_entry(args):
           format(datetime.utcfromtimestamp(int(time.time()))))
 
     for path in paths:
-        entry_path(args.colldata, coll_meta_indexed, path)
+        entry_path(path, args.colldata, coll_meta_indexed)
 
 
 def make_arg_parser():
