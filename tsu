@@ -320,11 +320,14 @@ def metric_meta(rpath, icpath, coll_meta=None):
             acc = "/".join(acc_parts)
             acc_path = plat + "/" + acc
         else:
-            warn("icpath was given but it has <= 3 parts: {}", icpath)
+            warn("path does not follow the expected structure"
+                 " (platform/account/metric.ext): {}", icpath)
 
     acc_meta = None
     if (coll_meta is not None) and (acc_path is not None):
-        acc_meta = coll_meta[acc_path]
+        acc_meta = coll_meta.get(acc_path)
+        if acc_meta is None:
+            warn("account metadata not found for acc path: {}", acc_path)
 
     return MetricMeta(rpath=rpath, name=met_name,
                       platform=plat, account=acc, account_path=acc_path,
@@ -653,15 +656,22 @@ def entry_file(met_meta):
     printer("saved: time {}, value {}{}".format(dt, val, delta))
 
 
-def entry_path(entry_icpath, coll_data_root, coll_meta):
-    # resolve the in-collection path with collection data dir
-    entry_rpath = os.path.join(coll_data_root, entry_icpath)
+def entry_path(path, coll_data_root, coll_meta):
+    if coll_data_root is None:
+        rpath = path
+    else:
+        # resolve the in-collection path with collection data dir
+        rpath = os.path.join(coll_data_root, path)
+
     # unlike the other places, here we DO filter the root path.
     # if it is a file, and not of a numeric type, we won't know how to
     # properly add data to it
-    for met_rpath in file_paths_sorted(entry_rpath, pred=is_numeric_type,
+    for met_rpath in file_paths_sorted(rpath, pred=is_numeric_type,
                                        filter_root=True, error=False):
-        met_icpath = os.path.relpath(met_rpath, coll_data_root)
+        if coll_data_root is None:
+            met_icpath = None
+        else:
+            met_icpath = os.path.relpath(met_rpath, coll_data_root)
         met_meta = metric_meta(met_rpath, met_icpath, coll_meta)
         entry_file(met_meta)
 
@@ -684,17 +694,36 @@ def cmd_entry(args):
 
     To quit the data entry session, hit Ctrl-C.
     """
-    # try loading the meta to possibly trigger FileNotFoundError earlier
-    coll_meta = load_json(args.collmeta)
-    coll_meta_indexed = index_list(coll_meta, "path")
+    # Use `None` as a special value to say we don't know where the
+    # collection starts, can't do any path math, and have to trust that
+    # the user knows correct paths and can survive without (some) hints.
+    coll_data_root = None
+    coll_meta = None
+    if os.path.isdir(args.colldata):
+        # "colldata dir exists" is the trigger to enable the collection
+        # path math mode. Here we don't care where colldata came from,
+        # an explicit `--colldata` switch or a silent default.
+        coll_data_root = args.colldata
+
+        # only try to load account metadata if we know the collection
+        # base dir, otherwise it will be impossible to navigate the meta
+        try:
+            coll_meta = index_list(load_json(args.collmeta), key="path")
+        except FileNotFoundError:
+            warn("could not load account meta from {}, will omit some hints!",
+                 args.collmeta)
 
     pathlist = args.pathlist
     if pathlist:
         # pathlist items MUST be relative to the collection data dir
+        if coll_data_root is None:
+            raise TsuError("pathlist requires a valid collection data dir (see"
+                           " --colldata)")
         paths = load_list(pathlist)
     else:
-        # todo: normalize path passed via CLI into an in-collection path
-        warn("make sure path is relative to the collection or use --pathlist!")
+        if coll_data_root is None:
+            warn("collection data dir is unknown, hints will be limited! (see"
+                 " --colldata)")
         paths = [args.path]
 
     print("Interactive data entry mode. Make sure your system clock is accurate.")
@@ -702,7 +731,7 @@ def cmd_entry(args):
           format(datetime.utcfromtimestamp(int(time.time()))))
 
     for path in paths:
-        entry_path(path, args.colldata, coll_meta_indexed)
+        entry_path(path, coll_data_root, coll_meta)
 
 
 def make_arg_parser():
