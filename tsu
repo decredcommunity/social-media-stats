@@ -17,7 +17,7 @@ class Config:
     data_root_path          = "data"
     default_coll_data_path  = "data/accounts"
     default_coll_meta_path  = "data/accounts.json"
-    export_outpath         = "export.csv"
+    export_outpath          = "export.csv"
 
 
 class Const:
@@ -201,7 +201,7 @@ def cmd_view(args):
 
 
 # Path-related terminology used below is better explained in one place:
-# 
+#
 # - collection - a set of data of (mostly) the same type and structure.
 #   Currently, tsu can only handle a collection that is a hierarchy of
 #   time series files.
@@ -228,6 +228,7 @@ def cmd_view(args):
 MetricMeta = namedtuple("MetricMeta", [
     "rpath",
     "name",
+    "value_type",
     "platform",
     "account",
     "account_path",
@@ -236,7 +237,7 @@ MetricMeta = namedtuple("MetricMeta", [
 
 
 def cmd_latest(args):
-    coll_data_root = args.colldata
+    coll_data_dir = args.colldata
 
     metric_icpaths = load_list(args.metriclist)
     if not metric_icpaths:
@@ -249,7 +250,7 @@ def cmd_latest(args):
 
     for met_icpath in metric_icpaths:
         # resolve met_icpath against the collection to get the real path
-        met_rpath = os.path.join(coll_data_root, met_icpath)
+        met_rpath = os.path.join(coll_data_dir, met_icpath)
         if not os.path.isfile(met_rpath):
             warn("not a file: {}", met_rpath)
             continue
@@ -257,10 +258,9 @@ def cmd_latest(args):
         if len(rows) < 1:
             warn("no data: {}", met_rpath)
             continue
-        valtype = value_type(met_rpath)
-        last_dt, last_val = parse_record(rows[-1], valtype)
         mm = metric_meta(met_rpath, met_icpath)
-        if mm:
+        last_dt, last_val = parse_record(rows[-1], mm.value_type)
+        if mm.platform and mm.account and mm.name:
             metstr = metfmt.format(mm.platform, mm.account, mm.name)
         else:
             metstr = "{:68}".format(met_icpath)
@@ -301,6 +301,8 @@ def metric_meta(rpath, icpath, coll_meta=None):
     _dirname, filename = os.path.split(rpath)
     met_name, _ext = os.path.splitext(filename)
 
+    val_type = value_type(rpath)
+
     # Example `icpath`: `github.com/decred/dcrd/forks.csv`
     # Here `github.com` is the platform, `decred/dcrd` is the account,
     # and `forks` is the metric.
@@ -327,52 +329,53 @@ def metric_meta(rpath, icpath, coll_meta=None):
     if (coll_meta is not None) and (acc_path is not None):
         acc_meta = coll_meta.get(acc_path)
         if acc_meta is None:
-            warn("account metadata not found for acc path: {}", acc_path)
+            warn("account meta not found for acc path: {}", acc_path)
 
-    return MetricMeta(rpath=rpath, name=met_name,
+    return MetricMeta(rpath=rpath, name=met_name, value_type=val_type,
                       platform=plat, account=acc, account_path=acc_path,
                       account_meta=acc_meta)
 
 
 def export_append_rows(rows, met_meta):
-    if value_type(met_meta.rpath) is None:
+    if met_meta.value_type is None:
         warn("exporting from unknown file type: {}", met_meta.rpath)
 
     tags = ""
     acc_meta = met_meta.account_meta
     if acc_meta:
-        if "tags" in acc_meta:
-            tags = " ".join(acc_meta["tags"])
+        atags = acc_meta.get("tags")
+        if atags:
+            tags = " ".join(atags)
     else:
-        warn("missing account meta for acc path: {}", met_meta.account_path)
+        warn("account meta not found for acc path: {}", met_meta.account_path)
 
     for ts, val in csv_iter(met_meta.rpath):
         rows.append((ts, met_meta.platform, met_meta.account, met_meta.name,
                      val, tags))
 
 
-def export_csv(coll_data_root, coll_meta, export_icpaths, outpath):
+def export_csv(export_icpaths, outpath, coll_data_dir, coll_meta):
     rows = []
     exported_files = 0
     skipped_paths = 0
 
     for export_icpath in export_icpaths:
-        # resolve the in-collection path with its data dir
-        rpath = os.path.join(coll_data_root, export_icpath)
+        # resolve the in-collection path
+        rpath = os.path.join(coll_data_dir, export_icpath)
         # if any path explicitly specified by the user is a file, try
         # exporting it regardless of its type
         # otherwise, filter the walked (discovered indirectly) paths
         # and only take time series files with numeric values
         for met_rpath in file_paths_sorted(rpath, pred=is_numeric_type,
                                            filter_root=False, error=False):
-            met_icpath = os.path.relpath(met_rpath, coll_data_root)
+            met_icpath = os.path.relpath(met_rpath, coll_data_dir)
             met_meta = metric_meta(met_rpath, met_icpath, coll_meta)
-            if (not met_meta.platform) or (not met_meta.account):
+            if met_meta.platform and met_meta.account:
+                export_append_rows(rows, met_meta)
+                exported_files += 1
+            else:
                 warn("unknown platform/account, skipping path: {}", met_rpath)
                 skipped_paths += 1
-                continue # for met_rpath ...
-            export_append_rows(rows, met_meta)
-            exported_files += 1
 
     # sort by timestamp (first row cell), in-place
     rows.sort()
@@ -388,8 +391,7 @@ def export_csv(coll_data_root, coll_meta, export_icpaths, outpath):
 
 def cmd_export_csv(args):
     # try loading the meta to possibly trigger FileNotFoundError earlier
-    coll_meta = load_json(args.collmeta)
-    coll_meta_indexed = index_list(coll_meta, key="path")
+    coll_meta = index_list(load_json(args.collmeta), key="path")
 
     pathlist = args.pathlist
     if pathlist:
@@ -409,7 +411,7 @@ def cmd_export_csv(args):
         export_paths = [path]
         print("exporting all metrics under:", path)
 
-    export_csv(args.colldata, coll_meta_indexed, export_paths, args.outpath)
+    export_csv(export_paths, args.outpath, args.colldata, coll_meta)
 
 
 def load_json(path):
@@ -427,18 +429,18 @@ def replace_url(url):
     return url
 
 
-def make_hint(met_meta, default_hint):
-    hint = ""
-    acc_meta = met_meta.account_meta
-    if acc_meta:
-        if "name" in acc_meta:
-            hint += '"' + acc_meta["name"] + '"'
-        if "url" in acc_meta:
-            if hint:
-                hint += " "
-            hint += replace_url(acc_meta["url"])
-
-    return hint if hint else default_hint
+def make_hint(met_meta):
+    parts = []
+    am = met_meta.account_meta
+    if am:
+        aname = am.get("name")
+        if aname:
+            parts.append('"' + aname + '"')
+        aurl = am.get("url")
+        if aurl:
+            parts.append(replace_url(aurl))
+    hint = " ".join(parts) if parts else met_meta.rpath
+    return hint
 
 
 class SpecialValue:
@@ -598,15 +600,12 @@ def make_prompt_prefix(met_meta):
 
 
 def entry_file(met_meta):
-    _dir, filename = os.path.split(met_meta.rpath)
-
     prompt_prefix = make_prompt_prefix(met_meta)
     printer = lambda s: print(prompt_prefix + s)
 
-    hint = make_hint(met_meta, default_hint=met_meta.rpath)
-    printer("capture the value for " + hint)
+    printer("capture the value for " + make_hint(met_meta))
 
-    valtype = value_type(filename)
+    valtype = met_meta.value_type
     rows = list(csv_iter(met_meta.rpath)) # read all to get the length
     last_dt, last_val = None, None
     if len(rows) > 0:
@@ -656,22 +655,22 @@ def entry_file(met_meta):
     printer("saved: time {}, value {}{}".format(dt, val, delta))
 
 
-def entry_path(path, coll_data_root, coll_meta):
-    if coll_data_root is None:
+def entry_path(path, coll_data_dir, coll_meta):
+    if coll_data_dir is None:
         rpath = path
     else:
-        # resolve the in-collection path with collection data dir
-        rpath = os.path.join(coll_data_root, path)
+        # resolve the in-collection path
+        rpath = os.path.join(coll_data_dir, path)
 
     # unlike the other places, here we DO filter the root path.
     # if it is a file, and not of a numeric type, we won't know how to
     # properly add data to it
     for met_rpath in file_paths_sorted(rpath, pred=is_numeric_type,
                                        filter_root=True, error=False):
-        if coll_data_root is None:
+        if coll_data_dir is None:
             met_icpath = None
         else:
-            met_icpath = os.path.relpath(met_rpath, coll_data_root)
+            met_icpath = os.path.relpath(met_rpath, coll_data_dir)
         met_meta = metric_meta(met_rpath, met_icpath, coll_meta)
         entry_file(met_meta)
 
@@ -697,16 +696,16 @@ def cmd_entry(args):
     # Use `None` as a special value to say we don't know where the
     # collection starts, can't do any path math, and have to trust that
     # the user knows correct paths and can survive without (some) hints.
-    coll_data_root = None
+    coll_data_dir = None
     coll_meta = None
     if os.path.isdir(args.colldata):
         # "colldata dir exists" is the trigger to enable the collection
         # path math mode. Here we don't care where colldata came from,
         # an explicit `--colldata` switch or a silent default.
-        coll_data_root = args.colldata
+        coll_data_dir = args.colldata
 
         # only try to load account metadata if we know the collection
-        # base dir, otherwise it will be impossible to navigate the meta
+        # data dir, otherwise it will be impossible to navigate the meta
         try:
             coll_meta = index_list(load_json(args.collmeta), key="path")
         except FileNotFoundError:
@@ -716,12 +715,12 @@ def cmd_entry(args):
     pathlist = args.pathlist
     if pathlist:
         # pathlist items MUST be relative to the collection data dir
-        if coll_data_root is None:
+        if coll_data_dir is None:
             raise TsuError("pathlist requires a valid collection data dir (see"
                            " --colldata)")
         paths = load_list(pathlist)
     else:
-        if coll_data_root is None:
+        if coll_data_dir is None:
             warn("collection data dir is unknown, hints will be limited! (see"
                  " --colldata)")
         paths = [args.path]
@@ -731,7 +730,7 @@ def cmd_entry(args):
           format(datetime.utcfromtimestamp(int(time.time()))))
 
     for path in paths:
-        entry_path(path, coll_data_root, coll_meta)
+        entry_path(path, coll_data_dir, coll_meta)
 
 
 def make_arg_parser():
