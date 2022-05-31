@@ -16,7 +16,6 @@ import time
 class Config:
     data_root_path          = "data"
     default_coll_data_path  = "data/accounts"
-    default_coll_meta_path  = "data/accounts.json"
     export_outpath          = "export.csv"
 
 
@@ -238,6 +237,9 @@ MetricMeta = namedtuple("MetricMeta", [
 
 def cmd_latest(args):
     coll_data_dir = args.colldata
+    if not os.path.isdir(coll_data_dir):
+        raise TsuError("collection data dir is required but '{}' is not a dir"
+                       " (see -c)".format(coll_data_dir))
 
     metric_icpaths = load_list(args.metriclist)
     if not metric_icpaths:
@@ -268,7 +270,18 @@ def cmd_latest(args):
 
 
 def cmd_list_accounts(args):
-    for acc in load_json(args.collmeta):
+    if args.collmeta:
+        coll_meta_path = args.collmeta
+    else:
+        coll_meta_path = args.colldata + ".json"
+
+    try:
+        accs_meta = load_json(coll_meta_path)
+    except FileNotFoundError:
+        raise TsuError("could not load account meta from '{}' (see -m)"
+                       "".format(coll_meta_path))
+
+    for acc in accs_meta:
         print(acc["path"])
 
 
@@ -390,12 +403,28 @@ def export_csv(export_icpaths, outpath, coll_data_dir, coll_meta):
 
 
 def cmd_export_csv(args):
-    # try loading the meta to possibly trigger FileNotFoundError earlier
-    coll_meta = index_list(load_json(args.collmeta), key="path")
+    coll_data_dir = None
+    coll_meta = None
+    if os.path.isdir(args.colldata):
+        coll_data_dir = args.colldata
+        # only try to load account metadata if we know the collection
+        # data dir, otherwise it will be impossible to navigate the meta
+        if args.collmeta:
+            coll_meta_path = args.collmeta
+        else:
+            coll_meta_path = coll_data_dir + ".json"
+        try:
+            coll_meta = index_list(load_json(coll_meta_path), key="path")
+        except FileNotFoundError:
+            raise TsuError("could not load account meta from '{}' (see -m)"
+                           "".format(coll_meta_path))
 
     pathlist = args.pathlist
     if pathlist:
         # pathlist items MUST be relative to the collection data dir
+        if coll_data_dir is None:
+            raise TsuError("pathlist requires a valid collection data dir (see"
+                           " -c)")
         export_paths = load_list(pathlist)
         print("exporting {} paths listed in: {}"
               "".format(len(export_paths), pathlist))
@@ -406,7 +435,7 @@ def cmd_export_csv(args):
         # therefore, we must convert user-specified path (rpath) to one
         # that is properly based off the collection data dir (icpath)
         # todo: normalize path passed via CLI into an in-collection path
-        warn("make sure path is relative to the collection or use --pathlist!")
+        warn("make sure path is relative to the collection or use -p!")
         path = args.path
         export_paths = [path]
         print("exporting all metrics under:", path)
@@ -701,28 +730,33 @@ def cmd_entry(args):
     if os.path.isdir(args.colldata):
         # "colldata dir exists" is the trigger to enable the collection
         # path math mode. Here we don't care where colldata came from,
-        # an explicit `--colldata` switch or a silent default.
+        # an explicit `-c` switch or a silent default.
         coll_data_dir = args.colldata
 
         # only try to load account metadata if we know the collection
         # data dir, otherwise it will be impossible to navigate the meta
+        if args.collmeta:
+            coll_meta_path = args.collmeta
+        else:
+            coll_meta_path = coll_data_dir + ".json"
+
         try:
-            coll_meta = index_list(load_json(args.collmeta), key="path")
+            coll_meta = index_list(load_json(coll_meta_path), key="path")
         except FileNotFoundError:
             warn("could not load account meta from {}, will omit some hints!",
-                 args.collmeta)
+                 coll_meta_path)
 
     pathlist = args.pathlist
     if pathlist:
         # pathlist items MUST be relative to the collection data dir
         if coll_data_dir is None:
             raise TsuError("pathlist requires a valid collection data dir (see"
-                           " --colldata)")
+                           " -c)")
         paths = load_list(pathlist)
     else:
         if coll_data_dir is None:
             warn("collection data dir is unknown, hints will be limited! (see"
-                 " --colldata)")
+                 " -c)")
         paths = [args.path]
 
     print("Interactive data entry mode. Make sure your system clock is accurate.")
@@ -738,96 +772,106 @@ def make_arg_parser():
 
     file_types_str = ", ".join(Const.int_exts + Const.float_exts + Const.str_exts)
     parser = argparse.ArgumentParser(
-        description=("time series utility. The following file types are"
-                     " supported: " + file_types_str))
+        description="Time series utility. Supported file types: "
+                     + file_types_str)
 
-    # -m and -d mean that only ONE collection can be handled at a time
+    # -c and -m mean that only ONE collection can be handled at a time
+
+    parser.add_argument(
+        "-c", "--colldata",
+        default=Config.default_coll_data_path,
+        help="Path to collection data directory. When this dir exists, it"
+             " changes how paths are treated by some commands. (default: {})"
+             "".format(Config.default_coll_data_path))
 
     parser.add_argument(
         "-m", "--collmeta",
-        default=Config.default_coll_meta_path,
-        help="path to collection metadata JSON file (default: {})"
-             "".format(Config.default_coll_meta_path))
-
-    parser.add_argument(
-        "-d", "--colldata",
-        default=Config.default_coll_data_path,
-        help="path to collection data directory (default: {})"
-             "".format(Config.default_coll_data_path))
+        help="Path to collection metadata JSON file (default is -c plus a"
+             " .json extension)")
 
     subparsers = parser.add_subparsers(dest="command", title="commands")
 
     listaccs = subparsers.add_parser(
         "listaccs", aliases=["la"],
-        help="list accounts in the JSON metadata file. -m is required if its"
-             " default does not exist.")
+        help="List accounts in the JSON collection metadata file. -m is"
+             " required if its default does not exist.")
     listaccs.set_defaults(func=cmd_list_accounts)
 
     validate = subparsers.add_parser(
         "validate", aliases=["val"],
-        help="validate time series files")
+        help="Validate time series files")
     validate.add_argument(
         "path", nargs="?",
         default=Config.data_root_path,
-        help="path to search time series files")
+        help="Path to search time series files (default: {})"
+             "".format(Config.data_root_path))
     validate.set_defaults(func=cmd_validate)
 
     view = subparsers.add_parser(
         "view", aliases=["v"],
-        help="view one or more time series files")
+        help="View one or more time series files")
     view.add_argument(
         "path",
-        help="path to view")
+        help="Path to view. If directory, view all files of known types")
     view.add_argument(
         "-l", "--limit",
-        help="max number of records to output for each file")
+        help="Max number of records to output for each file")
     view.set_defaults(func=cmd_view)
 
     latest = subparsers.add_parser(
         "latest",
-        help="print latest values for metrics listed in a file. -d is required"
+        help="Print latest values for metrics listed in a file. -c is required"
              " if its default does not exist.")
     latest.add_argument(
         "metriclist",
-        help="list file with metric files to report, one per line")
+        help="List file with metrics to report, one per line. Paths must be"
+             " files and must be *relative* to the collection data dir (-c).")
     latest.set_defaults(func=cmd_latest)
 
     export = subparsers.add_parser(
         "export",
-        help="export data into a single CSV file. -m and -d are required if"
-             " their defaults do not exist.",
-        description=("Export data from arbitrary tree of time series files"
-                     " into a single file (" + Config.export_outpath +
-                     " by default), overwriting it."))
+        help="Export data into a single CSV file. Both -c and -m are required"
+             " if their defaults do not exist.",
+        description="Export data from arbitrary tree of time series files into"
+                     " a single file, overwriting it.")
     export_src = export.add_mutually_exclusive_group(required=True)
     export_src.add_argument(
         "path", nargs="?",
         default=Config.default_coll_data_path,
-        help="path to export data points from")
+        help="Path to export data points from. It may be file or directory and"
+             " must be *relative* to the collection data dir, -c (default: {})"
+             "".format(Config.default_coll_data_path))
     export_src.add_argument(
         "-p", "--pathlist",
-        help="list file with paths to export data points from, one per line")
+        help="List file with paths to export data points from, one per line."
+             " Paths may be files or directories and must be *relative* to the"
+             " collection data dir (-c).")
     export.add_argument(
         "--outpath",
         default=Config.export_outpath,
-        help="file path to save")
+        help="Output path to save (default: {})".format(Config.export_outpath))
     export.set_defaults(func=cmd_export_csv)
 
     entry = subparsers.add_parser(
         "entry", aliases=["e"],
-        help="enter data manually. -m and -d are required if their defaults"
-             " do not exist",
+        help="Enter data manually. If -c (explicit or via its default) exists,"
+             " it changes path computation and entry hints. If -m exists, it"
+             " improves hints.",
         description=cmd_entry.__doc__)
     entry_target = entry.add_mutually_exclusive_group(required=True)
     entry_target.add_argument(
         "path", nargs="?",
         default=Config.default_coll_data_path,
-        help="file or directory path to enter data in; if directory, the"
-             " program will prompt for data entry for each time series file"
-             " found in it")
+        help="File or directory path to enter data in. If directory, the"
+             " program will prompt for data entry for each (numeric) time"
+             " series file found in it. If -c dir exists, path must be"
+             " *relative* to it. (default: {})"
+             "".format(Config.default_coll_data_path))
     entry_target.add_argument(
         "-p", "--pathlist",
-        help="list file with paths to enter data in, one path per line")
+        help="List file with paths to enter data in, one path per line."
+             " Paths may be files or directories and must be *relative* to the"
+             " collection data dir (-c).")
     entry.set_defaults(func=cmd_entry)
 
     return parser
