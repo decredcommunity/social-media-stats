@@ -403,10 +403,14 @@ def export_csv(export_icpaths, outpath, coll_data_dir, coll_meta):
 
 
 def cmd_export_csv(args):
+    # Path walking logic is mostly similar to `cmd_entry()`, with a
+    # notable exception that `-c` is always required.
     coll_data_dir = None
     coll_meta = None
     if os.path.isdir(args.colldata):
         coll_data_dir = args.colldata
+        print("Collection dir exists, treating paths as relative to:",
+              coll_data_dir)
         # only try to load account metadata if we know the collection
         # data dir, otherwise it will be impossible to navigate the meta
         if args.collmeta:
@@ -415,32 +419,28 @@ def cmd_export_csv(args):
             coll_meta_path = coll_data_dir + ".json"
         try:
             coll_meta = index_list(load_json(coll_meta_path), key="path")
+            print("Loaded {} accounts metadata from: {}"
+                  "".format(len(coll_meta), coll_meta_path))
         except FileNotFoundError:
             raise TsuError("could not load account meta from '{}' (see -m)"
                            "".format(coll_meta_path))
-
-    pathlist = args.pathlist
-    if pathlist:
-        # pathlist items MUST be relative to the collection data dir
-        if coll_data_dir is None:
-            raise TsuError("pathlist requires a valid collection data dir (see"
-                           " -c)")
-        export_paths = load_list(pathlist)
-        print("exporting {} paths listed in: {}"
-              "".format(len(export_paths), pathlist))
     else:
-        # for the user the most intuitive thing is to tab-complete a
-        # real file system path and pass it as the `path` argument,
-        # without ever thinking about our icpath/rpath magic.
-        # therefore, we must convert user-specified path (rpath) to one
-        # that is properly based off the collection data dir (icpath)
-        # todo: normalize path passed via CLI into an in-collection path
-        warn("make sure path is relative to the collection or use -p!")
-        path = args.path
-        export_paths = [path]
-        print("exporting all metrics under:", path)
+        raise TsuError("export requires a valid collection data dir but '{}'"
+                       " is not a directory (see -c)".format(args.colldata))
 
-    export_csv(export_paths, args.outpath, args.colldata, coll_meta)
+    if args.path:
+        export_paths = [args.path]
+        print("Exporting all metrics found in:", args.path)
+    elif args.pathlist:
+        export_paths = load_list(args.pathlist)
+        print("Exporting {} paths listed in: {}"
+              "".format(len(export_paths), args.pathlist))
+    else:
+        # if all we have is the collection dir, make it the export root
+        export_paths = [""]
+        print("Exporting all metrics found in the collection:", coll_data_dir)
+
+    export_csv(export_paths, args.outpath, coll_data_dir, coll_meta)
 
 
 def load_json(path):
@@ -727,11 +727,14 @@ def cmd_entry(args):
     # the user knows correct paths and can survive without (some) hints.
     coll_data_dir = None
     coll_meta = None
-    if os.path.isdir(args.colldata):
+    # Skip processing of `-c` and `-m` if `path` arg is set. 
+    if (not args.path) and os.path.isdir(args.colldata):
         # "colldata dir exists" is the trigger to enable the collection
         # path math mode. Here we don't care where colldata came from,
         # an explicit `-c` switch or a silent default.
         coll_data_dir = args.colldata
+        print("Collection dir exists, treating paths as relative to:",
+              coll_data_dir)
 
         # only try to load account metadata if we know the collection
         # data dir, otherwise it will be impossible to navigate the meta
@@ -742,22 +745,30 @@ def cmd_entry(args):
 
         try:
             coll_meta = index_list(load_json(coll_meta_path), key="path")
+            print("Loaded {} accounts metadata from: {}"
+                  "".format(len(coll_meta), coll_meta_path))
         except FileNotFoundError:
             warn("could not load account meta from {}, will omit some hints!",
                  coll_meta_path)
 
-    pathlist = args.pathlist
-    if pathlist:
+    if args.path:
+        paths = [args.path]
+        print("Walking real path '{}', hints disabled.".format(args.path))
+    elif args.pathlist:
         # pathlist items MUST be relative to the collection data dir
         if coll_data_dir is None:
             raise TsuError("pathlist requires a valid collection data dir (see"
                            " -c)")
-        paths = load_list(pathlist)
+        paths = load_list(args.pathlist)
+        print("Walking {} paths listed in: {}"
+              "".format(len(paths), args.pathlist))
+    elif coll_data_dir is not None:
+        # if all we have is the collection dir, make it the entry root
+        paths = [""]
+        print("Walking collection dir:", coll_data_dir)
     else:
-        if coll_data_dir is None:
-            warn("collection data dir is unknown, hints will be limited! (see"
-                 " -c)")
-        paths = [args.path]
+        raise TsuError("I don't know what path(s) to walk. Set the path arg,"
+                       " or -p, or -c.")
 
     print("Interactive data entry mode. Make sure your system clock is accurate.")
     print("Your system UTC time is:",
@@ -831,16 +842,15 @@ def make_arg_parser():
     export = subparsers.add_parser(
         "export",
         help="Export data into a single CSV file. Both -c and -m are required"
-             " if their defaults do not exist.",
+             " if their defaults do not exist. If neither 'path' nor -p are"
+             " set, -c will be attempted as a root dir to walk.",
         description="Export data from arbitrary tree of time series files into"
                      " a single file, overwriting it.")
-    export_src = export.add_mutually_exclusive_group(required=True)
+    export_src = export.add_mutually_exclusive_group(required=False)
     export_src.add_argument(
         "path", nargs="?",
-        default=Config.default_coll_data_path,
         help="Path to export data points from. It may be file or directory and"
-             " must be *relative* to the collection data dir, -c (default: {})"
-             "".format(Config.default_coll_data_path))
+             " must be *relative* to the collection data dir (-c).")
     export_src.add_argument(
         "-p", "--pathlist",
         help="List file with paths to export data points from, one per line."
@@ -854,19 +864,19 @@ def make_arg_parser():
 
     entry = subparsers.add_parser(
         "entry", aliases=["e"],
-        help="Enter data manually. If -c (explicit or via its default) exists,"
-             " it changes path computation and entry hints. If -m exists, it"
-             " improves hints.",
+        help="Enter data manually. If -c is in effect (i.e. exists and not"
+             " disabled by the 'path' arg), it changes path computation and"
+             " entry hints. If -m exists, it improves hints. If neither 'path'"
+             " nor -p are set, -c will be attempted as a root dir to walk.",
         description=cmd_entry.__doc__)
-    entry_target = entry.add_mutually_exclusive_group(required=True)
+    entry_target = entry.add_mutually_exclusive_group(required=False)
     entry_target.add_argument(
         "path", nargs="?",
-        default=Config.default_coll_data_path,
         help="File or directory path to enter data in. If directory, the"
              " program will prompt for data entry for each (numeric) time"
-             " series file found in it. If -c dir exists, path must be"
-             " *relative* to it. (default: {})"
-             "".format(Config.default_coll_data_path))
+             " series file found in it. The path must be a real path (NOT"
+             " relative to -c) and if set, it *disables* the -c path math and"
+             " entry hints.")
     entry_target.add_argument(
         "-p", "--pathlist",
         help="List file with paths to enter data in, one path per line."
