@@ -5,7 +5,7 @@
 import os
 import csv
 import json
-from collections import namedtuple
+from collections import namedtuple, OrderedDict
 from datetime import datetime, timezone
 from functools import partial
 from itertools import chain
@@ -235,12 +235,46 @@ MetricMeta = namedtuple("MetricMeta", [
 ])
 
 
-def cmd_latest(args):
-    coll_data_dir = args.colldata
-    if not os.path.isdir(coll_data_dir):
-        raise TsuError("collection data dir is required but '{}' is not a dir"
-                       " (see -c)".format(coll_data_dir))
+def coll_env(args, data="none", meta="none"):
+    # data and meta may be "none", "optional", or "required"
+    coll_data_dir, coll_meta_path, coll_meta = None, None, None
 
+    if (data == "optional") or (data == "required"):
+        if os.path.isdir(args.colldata):
+            coll_data_dir = args.colldata
+            print("Collection dir exists, treating paths as relative to:",
+                  coll_data_dir)
+        elif data == "required":
+            raise TsuError("collection data dir is required but '{}' is not a"
+                           " directory (see -c)".format(args.colldata))
+
+    if (meta == "optional") or (meta == "required"):
+        if args.collmeta:
+            coll_meta_path = args.collmeta
+        elif coll_data_dir is not None:
+            coll_meta_path = coll_data_dir + ".json"
+        elif meta == "required":
+            raise TsuError("collection metadata path is required but missing"
+                           " (see -c and -m)")
+
+        if coll_meta_path is not None:
+            try:
+                coll_meta = index_list(load_json(coll_meta_path), key="path")
+                print("Loaded {} accounts metadata from: {}"
+                      "".format(len(coll_meta), coll_meta_path))
+            except FileNotFoundError:
+                if meta == "required":
+                    raise TsuError("could not load account meta from '{}' (see"
+                                   " -m)".format(coll_meta_path))
+                elif meta == "optional":
+                    warn("could not load account meta from '{}', hints will be"
+                         " limited!", coll_meta_path)
+
+    return coll_data_dir, coll_meta
+
+
+def cmd_latest(args):
+    coll_data_dir, _ = coll_env(args, data="required", meta="none")
     metric_icpaths = load_list(args.metriclist)
     if not metric_icpaths:
         return
@@ -270,19 +304,11 @@ def cmd_latest(args):
 
 
 def cmd_list_accounts(args):
-    if args.collmeta:
-        coll_meta_path = args.collmeta
-    else:
-        coll_meta_path = args.colldata + ".json"
+    # data="optional" allows to derive meta file path from data path
+    _, coll_meta = coll_env(args, data="optional", meta="required")
 
-    try:
-        accs_meta = load_json(coll_meta_path)
-    except FileNotFoundError:
-        raise TsuError("could not load account meta from '{}' (see -m)"
-                       "".format(coll_meta_path))
-
-    for acc in accs_meta:
-        print(acc["path"])
+    for acc_path in coll_meta.keys():
+        print(acc_path)
 
 
 def cmd_validate(args):
@@ -297,7 +323,7 @@ def load_list(path):
 
 
 def index_list(list, key):
-    res = {}
+    res = OrderedDict()
     for item in list:
         ik = item.get(key)
         if ik is None:
@@ -405,29 +431,7 @@ def export_csv(export_icpaths, outpath, coll_data_dir, coll_meta):
 def cmd_export_csv(args):
     # Path walking logic is mostly similar to `cmd_entry()`, with a
     # notable exception that `-c` is always required.
-    coll_data_dir = None
-    coll_meta = None
-    if os.path.isdir(args.colldata):
-        coll_data_dir = args.colldata
-        print("Collection dir exists, treating paths as relative to:",
-              coll_data_dir)
-        # only try to load account metadata if we know the collection
-        # data dir, otherwise it will be impossible to navigate the meta
-        if args.collmeta:
-            coll_meta_path = args.collmeta
-        else:
-            coll_meta_path = coll_data_dir + ".json"
-        try:
-            coll_meta = index_list(load_json(coll_meta_path), key="path")
-            print("Loaded {} accounts metadata from: {}"
-                  "".format(len(coll_meta), coll_meta_path))
-        except FileNotFoundError:
-            raise TsuError("could not load account meta from '{}' (see -m)"
-                           "".format(coll_meta_path))
-    else:
-        raise TsuError("export requires a valid collection data dir but '{}'"
-                       " is not a directory (see -c)".format(args.colldata))
-
+    coll_data_dir, coll_meta = coll_env(args, data="required", meta="required")
     if args.path:
         export_paths = [args.path]
         print("Exporting all metrics found in:", args.path)
@@ -725,35 +729,17 @@ def cmd_entry(args):
     # Use `None` as a special value to say we don't know where the
     # collection starts, can't do any path math, and have to trust that
     # the user knows correct paths and can survive without (some) hints.
-    coll_data_dir = None
-    coll_meta = None
-    # Skip processing of `-c` and `-m` if `path` arg is set. 
-    if (not args.path) and os.path.isdir(args.colldata):
-        # "colldata dir exists" is the trigger to enable the collection
-        # path math mode. Here we don't care where colldata came from,
-        # an explicit `-c` switch or a silent default.
-        coll_data_dir = args.colldata
-        print("Collection dir exists, treating paths as relative to:",
-              coll_data_dir)
+    coll_data_dir, coll_meta = None, None
 
-        # only try to load account metadata if we know the collection
-        # data dir, otherwise it will be impossible to navigate the meta
-        if args.collmeta:
-            coll_meta_path = args.collmeta
-        else:
-            coll_meta_path = coll_data_dir + ".json"
-
-        try:
-            coll_meta = index_list(load_json(coll_meta_path), key="path")
-            print("Loaded {} accounts metadata from: {}"
-                  "".format(len(coll_meta), coll_meta_path))
-        except FileNotFoundError:
-            warn("could not load account meta from {}, will omit some hints!",
-                 coll_meta_path)
+    # Only process `-c` and `-m` if `path` arg is NOT set. In other
+    # words, `path` arg disables the effects of `-c` and `-m`.
+    if args.path is None:
+        coll_data_dir, coll_meta = coll_env(args,
+                                            data="optional", meta="optional")
 
     if args.path:
         paths = [args.path]
-        print("Walking real path '{}', hints disabled.".format(args.path))
+        print("Walking real path '{}', hints disabled".format(args.path))
     elif args.pathlist:
         # pathlist items MUST be relative to the collection data dir
         if coll_data_dir is None:
