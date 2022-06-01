@@ -327,9 +327,11 @@ def index_list(list, key):
     for item in list:
         ik = item.get(key)
         if ik is None:
-            raise TsuError("missing value for key '{}'".format(key))
+            raise ValidationError("missing value for key '{}' in: {}"
+                                  "".format(key, item))
         if ik in res:
-            raise TsuError("duplicate value '{}' for key '{}'".format(ik, key))
+            raise ValidationError("duplicate value '{}' for key '{}'"
+                                  "".format(ik, key))
         res[ik] = item
     return res
 
@@ -521,7 +523,7 @@ def command_input(prompt, input):
         if inp == ":t":
             return TimestampCommand()
         else:
-            raise ValueError("unknown command '{}'".format(inp))
+            raise ValidationError("unknown command '{}'".format(inp))
     else:
         return inp
 
