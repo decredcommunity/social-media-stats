@@ -134,12 +134,61 @@
   {
     "note": "https://decred.org/matrix/",
     "path": "matrix/matrix.decred.org",
-    "url": "matrix.decred.org"
+    "url": "matrix.decred.org",
+    "metrics": [
+      {
+        "id": "dcr-users",
+        "url": "https://matrix.to/#/#dcr:decred.org/",
+        "url_alt": "https://matrix.to/#/!QhkLAKEeDrzTQObIxK:decred.org/"
+      },
+      {
+        "id": "dev-users",
+        "url": "https://matrix.to/#/#dev:decred.org/",
+        "url_alt": "https://matrix.to/#/!zefvTnlxYHPKvJMThI:decred.org/"
+      },
+      {
+        "id": "dex-users",
+        "url": "https://matrix.to/#/#dex:decred.org/",
+        "url_alt": "https://matrix.to/#/!mlRZqBtfWHrcmgdTWB:decred.org/"
+      },
+      {
+        "id": "general-users",
+        "url": "https://matrix.to/#/#general:decred.org/",
+        "url_alt": "https://matrix.to/#/!aNnAOHkWUdNcEXRGjJ:decred.org/"
+      },
+      {
+        "id": "proposals-users",
+        "url": "https://matrix.to/#/#proposals:decred.org/",
+        "url_alt": "https://matrix.to/#/!qYpAAClAYrHaUIGkLs:decred.org/"
+      },
+      {
+        "id": "support-users",
+        "url": "https://matrix.to/#/#support:decred.org/",
+        "url_alt": "https://matrix.to/#/!xUNvyzkFgiMjhvPbIi:decred.org/"
+      },
+      {
+        "id": "trading-users",
+        "url": "https://matrix.to/#/#trading:decred.org/",
+        "url_alt": "https://matrix.to/#/!lDZCzVQjFoJsXMPkvr:decred.org/"
+      }
+    ]
   },
   {
     "note": "https://planetdecred.org/chat/",
     "path": "matrix/matrix.planetdecred.org",
-    "url": "matrix.planetdecred.org"
+    "url": "matrix.planetdecred.org",
+    "metrics": [
+      {
+        "id": "godcr-users",
+        "url": "https://matrix.to/#/#godcr:planetdecred.org/",
+        "url_alt": "https://matrix.to/#/!GIjqjGSvlvacsZINXy:planetdecred.org/"
+      },
+      {
+        "id": "planetdecred-users",
+        "url": "https://matrix.to/#/#planetdecred:planetdecred.org/",
+        "url_alt": "https://matrix.to/#/!gruHpujXftcsHcghjx:planetdecred.org/"
+      }
+    ]
   },
   {
     "path": "medium.com/Ammarooni",
@@ -416,7 +465,7 @@
   },
   {
     "created_utc": "2014-12-16",
-    "notes": "The username was `lukebp_`, then `lukebp`, then the account was removed.",
+    "note": "The username was `lukebp_`, then `lukebp`, then the account was removed.",
     "path": "twitter.com/lukebp",
     "tags": ["personal"],
     "url": "https://twitter.com/lukebp"
@@ -463,28 +512,39 @@
     "name": "Decred Brasil Oficial",
     "path": "youtube.com/decredbrasil",
     "tags": ["regional"],
-    "url": "https://www.youtube.com/channel/UC73wa2ddXuPWsmenVfeFTYg"
+    "url": "https://www.youtube.com/channel/UC73wa2ddXuPWsmenVfeFTYg",
+    "url_alt": [
+      "https://www.youtube.com/c/DecredBrasilOficial"
+    ]
   },
   {
     "created_utc": "2017-04-06",
     "name": "Decred",
     "path": "youtube.com/decredchannel",
-    "url": "https://www.youtube.com/decredchannel"
+    "url": "https://www.youtube.com/channel/UCJ2bYDaPYHpSmJPh_M5dNSg",
+    "url_alt": [
+      "https://www.youtube.com/c/DecredChannel",
+      "https://www.youtube.com/decredchannel"
+    ]
   },
   {
-    "alt_urls": [
-      "https://www.youtube.com/user/PhoenixGreen24"
-    ],
     "created_utc": "2008-05-29",
     "name": "Society Decentralised",
     "path": "youtube.com/decredsociety",
-    "url": "https://www.youtube.com/c/DecredSociety"
+    "url": "https://www.youtube.com/channel/UCZSFAqUMp8v58eEQl_bzWYg",
+    "url_alt": [
+      "https://www.youtube.com/c/DecredSociety",
+      "https://www.youtube.com/user/PhoenixGreen24"
+    ]
   },
   {
     "created_utc": "2019-02-27",
     "name": "Decred en Espa\u00f1ol",
     "path": "youtube.com/decredspanish",
     "tags": ["regional"],
-    "url": "https://www.youtube.com/channel/UCCprOo4gR1vsjJTAzv8BMBQ"
+    "url": "https://www.youtube.com/channel/UCCprOo4gR1vsjJTAzv8BMBQ",
+    "url_alt": [
+      "https://www.youtube.com/c/DecredenEspañol"
+    ]
   }
 ]
