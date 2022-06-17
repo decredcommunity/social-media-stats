@@ -2,15 +2,15 @@
 
 # tsu - time series utility
 
-import os
 import csv
-import json
 from collections import namedtuple, OrderedDict
 from datetime import datetime, timezone
 from functools import partial
 from itertools import chain
-from urllib.parse import urlparse, urlunparse
+import json
+import os
 import time
+from urllib.parse import urlparse, urlunparse
 
 
 class Config:
@@ -26,8 +26,8 @@ class Const:
     numeric_types       = [int, float]
 
 
-# Define and catch our own exception to avoid intercepting language and library
-# exceptions.
+# Define and catch our own errors to avoid intercepting language and
+# library errors.
 class TsuError(Exception):
     pass
 
@@ -117,7 +117,7 @@ def csv_iter(path):
 
 
 def write_csv(path, rows):
-    # overwrite existing file
+    # Overwrite existing file.
     with open(path, "w", newline="") as f:
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL, lineterminator="\n")
         writer.writerows(rows)
@@ -140,13 +140,14 @@ def validate(path, view=False, limit=None):
         first = max(len(all_rows) - limit, 0)
         rows = all_rows[first:]
 
-    # start counting from 1 to match file line number
+    # Start counting from 1 to match file line number.
     for line_num, row in enumerate(rows, start=first + 1):
         try:
             dt, val = parse_record(row, valtype)
             if dt <= prev_dt:
                 raise ValidationError(
-                    "timestamp '{}' must be greater than '{}'".format(dt, prev_dt))
+                    "timestamp '{}' must be greater than '{}'"
+                    "".format(dt, prev_dt))
             prev_dt = dt
             if view:
                 print_record(dt, val, valtype)
@@ -157,8 +158,8 @@ def validate(path, view=False, limit=None):
 def file_paths_sorted(root, pred, filter_root=True, error=True):
     paths = []
     if os.path.isfile(root):
-        # filter_root=False allows a uniform interface for handling two
-        # different cases. When a caller (indirectly it is the user)
+        # `filter_root=False` allows a uniform interface for handling
+        # two different cases. When a caller (indirectly it is the user)
         # _knows_ that root is a file that must be used regardless of
         # its type, predicate check is skipped. However, when root is a
         # directory that must be walked, the caller (user) wants the
@@ -191,7 +192,8 @@ def cmd_view(args):
         try:
             int_limit = int(limit)
         except ValueError as e:
-            raise TsuError("limit is not an integer: '{}'".format(limit)) from e
+            raise TsuError("limit is not an integer: '{}'"
+                           "".format(limit)) from e
 
     root = args.path
     for fp in file_paths_sorted(root, pred=is_known_type, filter_root=False):
@@ -236,7 +238,7 @@ MetricMeta = namedtuple("MetricMeta", [
 
 
 def coll_env(args, data="none", meta="none"):
-    # data and meta may be "none", "optional", or "required"
+    # `data` and `meta` may be "none", "optional", or "required".
     coll_data_dir, coll_meta_path, coll_meta = None, None, None
 
     if (data == "optional") or (data == "required"):
@@ -285,7 +287,7 @@ def cmd_latest(args):
     print("{:-<20}|{:-<24}|{:-<24}|{:-<20}|{:-<7}".format("", "", "", "", ""))
 
     for met_icpath in metric_icpaths:
-        # resolve met_icpath against the collection to get the real path
+        # Resolve the in-collection path to get the real path.
         met_rpath = os.path.join(coll_data_dir, met_icpath)
         if not os.path.isfile(met_rpath):
             warn("not a file: {}", met_rpath)
@@ -304,7 +306,7 @@ def cmd_latest(args):
 
 
 def cmd_list_accounts(args):
-    # data="optional" allows to derive meta file path from data path
+    # `data="optional"` allows to derive meta file path from data path.
     _, coll_meta = coll_env(args, data="optional", meta="required")
 
     for acc_path in coll_meta.keys():
@@ -337,8 +339,8 @@ def index_list(list, key):
 
 
 def metric_meta(rpath, icpath, coll_meta=None):
-    # to have met_name in more cases, take it from rpath and not from
-    # icpath
+    # To have `met_name` in more cases, take it from `rpath` and not
+    # from `icpath`.
     _dirname, filename = os.path.split(rpath)
     met_name, _ext = os.path.splitext(filename)
 
@@ -346,16 +348,16 @@ def metric_meta(rpath, icpath, coll_meta=None):
 
     # Example `icpath`: `github.com/decred/dcrd/forks.csv`
     # Here `github.com` is the platform, `decred/dcrd` is the account,
-    # and `forks` is the metric.
-    # Therefore, `icpath` normally has 3 parts (minimum), 4 for
-    # two-level accounts like on github.com, and possibly more.
-    # icpath MUST only use `/` path separator and MUST be relative to
+    # and `forks` is the metric. Therefore, `icpath` normally has 3
+    # parts (minimum), 4 for two-level accounts like on github.com, and
+    # possibly more.
+    # `icpath` MUST only use `/` path separator and MUST be relative to
     # collection data dir, i.e. must not include any parts above
     # platform, i.e. not be concerned in what collection it is placed.
 
     plat, acc, acc_path = None, None, None
     if icpath is not None:
-        # todo: test how `/` in metric paths would work on Windows
+        # todo: Test how `/` in metric paths would work on Windows.
         parts = icpath.split("/")
         icpath_valid = len(parts) >= 3
         if icpath_valid:
@@ -401,12 +403,12 @@ def export_csv(export_icpaths, outpath, coll_data_dir, coll_meta):
     skipped_paths = 0
 
     for export_icpath in export_icpaths:
-        # resolve the in-collection path
+        # Resolve the in-collection path.
         rpath = os.path.join(coll_data_dir, export_icpath)
-        # if any path explicitly specified by the user is a file, try
-        # exporting it regardless of its type
-        # otherwise, filter the walked (discovered indirectly) paths
-        # and only take time series files with numeric values
+        # If any path explicitly specified by the user is a file, try
+        # exporting it regardless of its type. Otherwise, filter the
+        # walked (discovered indirectly) paths and only take time series
+        # files with numeric values.
         for met_rpath in file_paths_sorted(rpath, pred=is_numeric_type,
                                            filter_root=False, error=False):
             met_icpath = os.path.relpath(met_rpath, coll_data_dir)
@@ -418,14 +420,14 @@ def export_csv(export_icpaths, outpath, coll_data_dir, coll_meta):
                 warn("unknown platform/account, skipping path: {}", met_rpath)
                 skipped_paths += 1
 
-    # sort by timestamp (first row cell), in-place
+    # In-place sort by timestamp in the first row cell.
     rows.sort()
     print("exporting {} data points from {} files (skipped {} paths)"
           "".format(len(rows), exported_files, skipped_paths))
 
     header = ("timestamp", "platform", "account", "metric", "value", "tags")
 
-    # overwrite existing file
+    # Overwrite existing file.
     write_csv(outpath, chain([header], rows))
     print("file saved:", outpath)
 
@@ -442,7 +444,7 @@ def cmd_export_csv(args):
         print("Exporting {} paths listed in: {}"
               "".format(len(export_paths), args.pathlist))
     else:
-        # if all we have is the collection dir, make it the export root
+        # If all we have is the collection dir, make it the export root.
         export_paths = [""]
         print("Exporting all metrics found in the collection:", coll_data_dir)
 
@@ -455,7 +457,7 @@ def load_json(path):
 
 
 def replace_url(url):
-    # replace some URLs for easier data point collection
+    # Replace some URLs for easier data point collection.
     pu = urlparse(url)
     if pu.netloc == "twitter.com":
         newpu = pu._replace(netloc="nitter.eu")
@@ -540,8 +542,8 @@ def confirmed_input(prompt, confirm_prompt, input):
         return inp
 
     prev = inp
-    # keep collecting inputs until (a) two inputs match OR (b) input is
-    # canceled
+    # Keep collecting inputs until (a) two inputs match OR (b) input is
+    # canceled.
     while True:
         cur = input(confirm_prompt)
         if (cur == prev) or isinstance(cur, SpecialValue):
@@ -561,7 +563,8 @@ def validated_input(prompt, converter, printer, input):
 
 
 def parse_date(date_string, format):
-    # extend datetime.strptime formats with %s from the `date` program
+    # Extend `datetime.strptime` formats with `%s`, inspired by the
+    # `date` program from GNU coreutils.
     if format == "%s":
         return parse_timestamp(date_string)
     else:
@@ -593,13 +596,14 @@ def datetime_greater(other):
         if dt > other:
             return dt
         else:
-            raise ValidationError("timestamp must be greater than " + str(other))
+            raise ValidationError("timestamp must be greater than "
+                                  + str(other))
     return validator
 
 
 def make_input(prefix, typedesc, converter, printer):
     # Use function composition to build a powerful input function.
-    # Simpler input functions will run (and handle user's input) in the
+    # Input functions will run (and handle user's input) in the
     # following order: optional_input -> command_input ->
     # validated_input -> confirmed_input.
     cancelable = partial(optional_input, input=input)
@@ -641,11 +645,12 @@ def entry_file(met_meta):
     printer("capture the value for " + make_hint(met_meta))
 
     valtype = met_meta.value_type
-    rows = list(csv_iter(met_meta.rpath)) # read all to get the length
+    # Read all to know the length.
+    rows = list(csv_iter(met_meta.rpath))
     last_dt, last_val = None, None
     if len(rows) > 0:
         last_dt, last_val = parse_record(rows[-1], valtype)
-        # extra output for a sanity check
+        # Extra output for a sanity check.
         printer("last record is: time {}, value {}".format(last_dt, last_val))
 
     if valtype == int:
@@ -655,11 +660,11 @@ def entry_file(met_meta):
     elif valtype == str:
         input = make_input(prompt_prefix, "string", identity, printer)
     else:
-        # use Exception over TsuError to force traceback printing
+        # Use `Exception` over `TsuError` to force traceback printing.
         raise Exception("unexpected value type: " + str(valtype))
 
     dt_custom = None
-    while True: # main entry loop
+    while True: # main_entry_loop
         inp = input()
         dt = dt_custom if dt_custom else datetime.utcnow().replace(microsecond=0)
         if isinstance(inp, InputCancel):
@@ -668,16 +673,17 @@ def entry_file(met_meta):
         elif isinstance(inp, TimestampCommand):
             dt_inp = timestamp_input(prompt_prefix, last_dt, printer)
             if isinstance(dt_inp, datetime):
-                printer("using timestamp {} for current metric only".format(dt_inp))
+                printer("using timestamp {} for current metric only"
+                        "".format(dt_inp))
                 dt_custom = dt_inp
             elif isinstance(dt_inp, InputCancel):
                 printer("timestamp entry canceled")
         elif isinstance(inp, SpecialValue):
-            # use Exception over TsuError to force traceback printing
+            # Use `Exception` over `TsuError` to force a traceback.
             raise Exception("unexpected SpecialValue: " + str(inp))
         else:
             val = inp
-            break # main entry loop
+            break # main_entry_loop
 
     if valtype == int and last_val:
         delta = " ({:+})".format(val - last_val)
@@ -694,12 +700,12 @@ def entry_path(path, coll_data_dir, coll_meta):
     if coll_data_dir is None:
         rpath = path
     else:
-        # resolve the in-collection path
+        # Resolve the in-collection path.
         rpath = os.path.join(coll_data_dir, path)
 
-    # unlike the other places, here we DO filter the root path.
-    # if it is a file, and not of a numeric type, we won't know how to
-    # properly add data to it
+    # Unlike the other places, here we DO filter out the root path.
+    # If it is a file, and not of a numeric type, we won't know how to
+    # properly add data to it.
     for met_rpath in file_paths_sorted(rpath, pred=is_numeric_type,
                                        filter_root=True, error=False):
         if coll_data_dir is None:
@@ -733,17 +739,18 @@ def cmd_entry(args):
     # the user knows correct paths and can survive without (some) hints.
     coll_data_dir, coll_meta = None, None
 
-    # Only process `-c` and `-m` if `path` arg is NOT set. In other
+    # Only process `-c` and `-m` if the `path` arg is NOT set. In other
     # words, `path` arg disables the effects of `-c` and `-m`.
     if args.path is None:
         coll_data_dir, coll_meta = coll_env(args,
-                                            data="optional", meta="optional")
+                                            data="optional",
+                                            meta="optional")
 
     if args.path:
         paths = [args.path]
         print("Walking real path '{}', hints disabled".format(args.path))
     elif args.pathlist:
-        # pathlist items MUST be relative to the collection data dir
+        # `pathlist` items MUST be relative to the collection data dir.
         if coll_data_dir is None:
             raise TsuError("pathlist requires a valid collection data dir (see"
                            " -c)")
@@ -751,15 +758,15 @@ def cmd_entry(args):
         print("Walking {} paths listed in: {}"
               "".format(len(paths), args.pathlist))
     elif coll_data_dir is not None:
-        # if all we have is the collection dir, make it the entry root
+        # If all we have is the collection dir, make it the entry root.
         paths = [""]
         print("Walking collection dir:", coll_data_dir)
     else:
         raise TsuError("I don't know what path(s) to walk. Set the path arg,"
                        " or -p, or -c.")
 
-    print("Interactive data entry mode. Make sure your system clock is accurate.")
-    print("Your system UTC time is:",
+    print("Interactive data entry mode.")
+    print("Make sure your system time is accurate (UTC):",
           format(datetime.utcfromtimestamp(int(time.time()))))
 
     for path in paths:
@@ -769,12 +776,14 @@ def cmd_entry(args):
 def make_arg_parser():
     import argparse
 
-    file_types_str = ", ".join(Const.int_exts + Const.float_exts + Const.str_exts)
+    file_types_str = ", ".join(Const.int_exts +
+                               Const.float_exts +
+                               Const.str_exts)
     parser = argparse.ArgumentParser(
         description="Time series utility. Supported file types: "
                      + file_types_str)
 
-    # -c and -m mean that only ONE collection can be handled at a time
+    # `-c` and `-m` mean that only ONE collection is handled at a time.
 
     parser.add_argument(
         "-c", "--colldata",
@@ -887,8 +896,8 @@ def main():
         except KeyboardInterrupt:
             print("\naborting")
         except BrokenPipeError:
-            # silence error when e.g. piping into `less` and quitting before
-            # reading all
+            # Silence error when e.g. piping into `less` and quitting
+            # it before consuming everything from the pipe.
             pass
     else:
         parser.print_usage()
