@@ -1,0 +1,12 @@
+Err testdata/common.tsi:1: Record must have exactly 2 fields: ['1', '1', '1']
+Err testdata/common.tsi:2: Record must have exactly 2 fields: ['1']
+Err testdata/common.tsi:3: Timestamp is not an integer: 'abc'
+Err testdata/common.tsi:4: Cannot parse datetime from timestamp: '99999999999999'
+Err testdata/common.tsi:6: Timestamp '1970-01-01 00:00:00' must be greater than '1970-01-01 00:00:01'
+Err testdata/common.tsi:7: Timestamp '1970-01-01 00:00:01' must be greater than '1970-01-01 00:00:01'
+Err testdata/floats.tsf:1: Value is not a float: ''
+Err testdata/floats.tsf:2: Value is not a float: 'abc'
+Err testdata/ints.tsi:1: Value is not an integer: ''
+Err testdata/ints.tsi:2: Value is not an integer: 'abc'
+Err testdata/ints.tsi:3: Value is not an integer: '1.1'
+Err testdata/strings.tss:1: Value is empty
