@@ -45,12 +45,12 @@ def parse_timestamp(s):
         tsi = int(s)
     except ValueError as e:
         raise ValidationError(
-            "timestamp is not an integer: '{}'".format(s)) from e
+            "Timestamp is not an integer: '{}'".format(s)) from e
     try:
         dt = datetime.utcfromtimestamp(tsi)
     except Exception as e:
         raise ValidationError(
-            "cannot parse datetime from timestamp: '{}'".format(tsi)) from e
+            "Cannot parse datetime from timestamp: '{}'".format(tsi)) from e
     return dt
 
 
@@ -59,7 +59,7 @@ def parse_int(s):
         return int(s)
     except ValueError as e:
         raise ValidationError(
-            "value is not an integer: '{}'".format(s)) from e
+            "Value is not an integer: '{}'".format(s)) from e
 
 
 def parse_float(s):
@@ -67,13 +67,13 @@ def parse_float(s):
         return float(s)
     except ValueError as e:
         raise ValidationError(
-            "value is not a float: '{}'".format(s)) from e
+            "Value is not a float: '{}'".format(s)) from e
 
 
 def parse_record(rec, valtype):
     if len(rec) != 2:
         raise ValidationError(
-            "record must have exactly 2 fields: " + str(rec))
+            "Record must have exactly 2 fields: " + str(rec))
     s1, s2 = rec
 
     dt = parse_timestamp(s1)
@@ -86,7 +86,7 @@ def parse_record(rec, valtype):
         if len(s2) > 0:
             val = s2
         else:
-            raise ValidationError("value is empty")
+            raise ValidationError("Value is empty")
     return dt, val
 
 
@@ -146,13 +146,13 @@ def validate(path, view=False, limit=None):
             dt, val = parse_record(row, valtype)
             if dt <= prev_dt:
                 raise ValidationError(
-                    "timestamp '{}' must be greater than '{}'"
+                    "Timestamp '{}' must be greater than '{}'"
                     "".format(dt, prev_dt))
             prev_dt = dt
             if view:
                 print_record(dt, val, valtype)
         except ValidationError as e:
-            print("err {}:{}: {}".format(path, line_num, e))
+            print("Err {}:{}: {}".format(path, line_num, e))
 
 
 def file_paths_sorted(root, pred, filter_root=True, error=True):
@@ -168,7 +168,7 @@ def file_paths_sorted(root, pred, filter_root=True, error=True):
         if (not filter_root) or root_ok:
             paths.append(root)
         if not root_ok:
-            warn("test {} failed for: {}", pred.__name__, root)
+            warn("Test {} failed for: {}", pred.__name__, root)
 
     elif os.path.isdir(root):
         for curdir, dirs, files in os.walk(root):
@@ -178,9 +178,9 @@ def file_paths_sorted(root, pred, filter_root=True, error=True):
 
     else:
         if error:
-            raise TsuError("path is neither a file nor a directory: " + root)
+            raise TsuError("Path is neither a file nor a directory: " + root)
         else:
-            warn("path is neither a file nor a directory: {}", root)
+            warn("Path is neither a file nor a directory: {}", root)
 
     return sorted(paths)
 
@@ -192,7 +192,7 @@ def cmd_view(args):
         try:
             int_limit = int(limit)
         except ValueError as e:
-            raise TsuError("limit is not an integer: '{}'"
+            raise TsuError("Limit is not an integer: '{}'"
                            "".format(limit)) from e
 
     root = args.path
@@ -247,7 +247,7 @@ def coll_env(args, data="none", meta="none"):
             print("Collection dir exists, treating paths as relative to:",
                   coll_data_dir)
         elif data == "required":
-            raise TsuError("collection data dir is required but '{}' is not a"
+            raise TsuError("Collection data dir is required but '{}' is not a"
                            " directory (see -c)".format(args.colldata))
 
     if (meta == "optional") or (meta == "required"):
@@ -256,7 +256,7 @@ def coll_env(args, data="none", meta="none"):
         elif coll_data_dir is not None:
             coll_meta_path = coll_data_dir + ".json"
         elif meta == "required":
-            raise TsuError("collection metadata path is required but missing"
+            raise TsuError("Collection metadata path is required but missing"
                            " (see -c and -m)")
 
         if coll_meta_path is not None:
@@ -266,10 +266,10 @@ def coll_env(args, data="none", meta="none"):
                       "".format(len(coll_meta), coll_meta_path))
             except FileNotFoundError:
                 if meta == "required":
-                    raise TsuError("could not load account meta from '{}' (see"
+                    raise TsuError("Could not load account meta from '{}' (see"
                                    " -m)".format(coll_meta_path))
                 elif meta == "optional":
-                    warn("could not load account meta from '{}', hints will be"
+                    warn("Could not load account meta from '{}', hints will be"
                          " limited!", coll_meta_path)
 
     return coll_data_dir, coll_meta
@@ -290,11 +290,11 @@ def cmd_latest(args):
         # Resolve the in-collection path to get the real path.
         met_rpath = os.path.join(coll_data_dir, met_icpath)
         if not os.path.isfile(met_rpath):
-            warn("not a file: {}", met_rpath)
+            warn("Not a file: {}", met_rpath)
             continue
         rows = list(csv_iter(met_rpath))
         if len(rows) < 1:
-            warn("no data: {}", met_rpath)
+            warn("No data: {}", met_rpath)
             continue
         mm = metric_meta(met_rpath, met_icpath)
         last_dt, last_val = parse_record(rows[-1], mm.value_type)
@@ -329,10 +329,10 @@ def index_list(list, key):
     for item in list:
         ik = item.get(key)
         if ik is None:
-            raise ValidationError("missing value for key '{}' in: {}"
+            raise ValidationError("Missing value for key '{}' in: {}"
                                   "".format(key, item))
         if ik in res:
-            raise ValidationError("duplicate value '{}' for key '{}'"
+            raise ValidationError("Duplicate value '{}' for key '{}'"
                                   "".format(ik, key))
         res[ik] = item
     return res
@@ -365,14 +365,14 @@ def metric_meta(rpath, icpath, coll_meta=None):
             acc = "/".join(acc_parts)
             acc_path = plat + "/" + acc
         else:
-            warn("path does not follow the expected structure"
+            warn("Path does not follow the expected structure"
                  " (platform/account/metric.ext): {}", icpath)
 
     acc_meta = None
     if (coll_meta is not None) and (acc_path is not None):
         acc_meta = coll_meta.get(acc_path)
         if acc_meta is None:
-            warn("account meta not found for acc path: {}", acc_path)
+            warn("Account meta not found for acc path: {}", acc_path)
 
     return MetricMeta(rpath=rpath, name=met_name, value_type=val_type,
                       platform=plat, account=acc, account_path=acc_path,
@@ -381,7 +381,7 @@ def metric_meta(rpath, icpath, coll_meta=None):
 
 def export_append_rows(rows, met_meta):
     if met_meta.value_type is None:
-        warn("exporting from unknown file type: {}", met_meta.rpath)
+        warn("Exporting from unknown file type: {}", met_meta.rpath)
 
     tags = ""
     acc_meta = met_meta.account_meta
@@ -390,7 +390,7 @@ def export_append_rows(rows, met_meta):
         if atags:
             tags = " ".join(atags)
     else:
-        warn("account meta not found for acc path: {}", met_meta.account_path)
+        warn("Account meta not found for acc path: {}", met_meta.account_path)
 
     for ts, val in csv_iter(met_meta.rpath):
         rows.append((ts, met_meta.platform, met_meta.account, met_meta.name,
@@ -417,19 +417,19 @@ def export_csv(export_icpaths, outpath, coll_data_dir, coll_meta):
                 export_append_rows(rows, met_meta)
                 exported_files += 1
             else:
-                warn("unknown platform/account, skipping path: {}", met_rpath)
+                warn("Unknown platform/account, skipping path: {}", met_rpath)
                 skipped_paths += 1
 
     # In-place sort by timestamp in the first row cell.
     rows.sort()
-    print("exporting {} data points from {} files (skipped {} paths)"
+    print("Exporting {} data points from {} files (skipped {} paths)"
           "".format(len(rows), exported_files, skipped_paths))
 
     header = ("timestamp", "platform", "account", "metric", "value", "tags")
 
     # Overwrite existing file.
     write_csv(outpath, chain([header], rows))
-    print("file saved:", outpath)
+    print("File saved:", outpath)
 
 
 def cmd_export_csv(args):
@@ -497,12 +497,12 @@ def optional_input(prompt, input):
     try:
         s = input(prompt)
         if s == "":
-            s = input("enter blank again to skip or a value to continue: ")
+            s = input("Enter blank again to skip or a value to continue: ")
             if s == "":
                 return InputCancel()
         return s
     except EOFError:
-        print("(got EOF)")
+        print("(Got EOF)")
         return InputCancel()
 
 
@@ -525,7 +525,7 @@ def command_input(prompt, input):
         if inp == ":t":
             return TimestampCommand()
         else:
-            raise ValidationError("unknown command '{}'".format(inp))
+            raise ValidationError("Unknown command '{}'".format(inp))
     else:
         return inp
 
@@ -559,7 +559,7 @@ def validated_input(prompt, converter, printer, input):
                 return inp
             return converter(inp)
         except ValidationError as e:
-            printer("error: {}".format(str(e)))
+            printer("Error: {}".format(str(e)))
 
 
 def parse_date(date_string, format):
@@ -572,7 +572,7 @@ def parse_date(date_string, format):
             return datetime.strptime(date_string, format)
         except ValueError as e:
             raise ValidationError(
-                "cannot parse datetime from: '{}'".format(date_string)) from e
+                "Cannot parse datetime from: '{}'".format(date_string)) from e
 
 
 def datetime_converter(s):
@@ -585,7 +585,7 @@ def datetime_converter(s):
             pass
 
     if not dt:
-        raise ValidationError("unrecognized date value: " + s)
+        raise ValidationError("Unrecognized date value: " + s)
 
     return dt
 
@@ -596,7 +596,7 @@ def datetime_greater(other):
         if dt > other:
             return dt
         else:
-            raise ValidationError("timestamp must be greater than "
+            raise ValidationError("Timestamp must be greater than "
                                   + str(other))
     return validator
 
@@ -610,8 +610,8 @@ def make_input(prefix, typedesc, converter, printer):
     command = partial(command_input, input=cancelable)
     validated = partial(validated_input, converter=converter, printer=printer,
                         input=command)
-    prompt = prefix + "enter {} value: ".format(typedesc)
-    confirm_prompt = prefix + "confirm {} value: ".format(typedesc)
+    prompt = prefix + "Enter {} value: ".format(typedesc)
+    confirm_prompt = prefix + "Confirm {} value: ".format(typedesc)
     confirmed = partial(confirmed_input, prompt, confirm_prompt, validated)
     return confirmed
 
@@ -622,7 +622,7 @@ def timestamp_input(prefix, min_ts, printer):
     while True:
         inp = input()
         if isinstance(inp, Command):
-            printer("error: commands are not allowed while entering timestamp")
+            printer("Error: commands are not allowed while entering timestamp")
         else:
             return inp
 
@@ -642,7 +642,7 @@ def entry_file(met_meta):
     prompt_prefix = make_prompt_prefix(met_meta)
     printer = lambda s: print(prompt_prefix + s)
 
-    printer("capture the value for " + make_hint(met_meta))
+    printer("Capture the value for " + make_hint(met_meta))
 
     valtype = met_meta.value_type
     # Read all to know the length.
@@ -651,7 +651,7 @@ def entry_file(met_meta):
     if len(rows) > 0:
         last_dt, last_val = parse_record(rows[-1], valtype)
         # Extra output for a sanity check.
-        printer("last record is: time {}, value {}".format(last_dt, last_val))
+        printer("Last record is: time {}, value {}".format(last_dt, last_val))
 
     if valtype == int:
         input = make_input(prompt_prefix, "integer", parse_int, printer)
@@ -661,26 +661,26 @@ def entry_file(met_meta):
         input = make_input(prompt_prefix, "string", identity, printer)
     else:
         # Use `Exception` over `TsuError` to force traceback printing.
-        raise Exception("unexpected value type: " + str(valtype))
+        raise Exception("Unexpected value type: " + str(valtype))
 
     dt_custom = None
     while True: # main_entry_loop
         inp = input()
         dt = dt_custom if dt_custom else datetime.utcnow().replace(microsecond=0)
         if isinstance(inp, InputCancel):
-            printer("skipping")
+            printer("Skipping")
             return
         elif isinstance(inp, TimestampCommand):
             dt_inp = timestamp_input(prompt_prefix, last_dt, printer)
             if isinstance(dt_inp, datetime):
-                printer("using timestamp {} for current metric only"
+                printer("Using timestamp {} for current metric only"
                         "".format(dt_inp))
                 dt_custom = dt_inp
             elif isinstance(dt_inp, InputCancel):
-                printer("timestamp entry canceled")
+                printer("Timestamp entry canceled")
         elif isinstance(inp, SpecialValue):
             # Use `Exception` over `TsuError` to force a traceback.
-            raise Exception("unexpected SpecialValue: " + str(inp))
+            raise Exception("Unexpected SpecialValue: " + str(inp))
         else:
             val = inp
             break # main_entry_loop
@@ -693,7 +693,7 @@ def entry_file(met_meta):
     ts = int(dt.replace(tzinfo=timezone.utc).timestamp())
     rows.append((ts, val))
     write_csv(met_meta.rpath, rows)
-    printer("saved: time {}, value {}{}".format(dt, val, delta))
+    printer("Saved: time {}, value {}{}".format(dt, val, delta))
 
 
 def entry_path(path, coll_data_dir, coll_meta):
@@ -892,9 +892,9 @@ def main():
         try:
             args.func(args)
         except (TsuError, FileNotFoundError) as e:
-            print("error:", e)
+            print("Error:", e)
         except KeyboardInterrupt:
-            print("\naborting")
+            print("\nAborting")
         except BrokenPipeError:
             # Silence error when e.g. piping into `less` and quitting
             # it before consuming everything from the pipe.
