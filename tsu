@@ -315,8 +315,11 @@ def cmd_list_accounts(args):
 
 def cmd_validate(args):
     root = args.path
+    files_checked = 0
     for fp in file_paths_sorted(root, pred=is_known_type, filter_root=False):
         validate(fp)
+        files_checked += 1
+    print("Checked {} files".format(files_checked))
 
 
 def load_list(path):
