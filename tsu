@@ -17,6 +17,7 @@ class Config:
     data_root_path          = "data"
     default_coll_data_path  = "data/accounts"
     export_outpath          = "export.csv"
+    host_replaces           = {}
 
 
 class Const:
@@ -459,11 +460,11 @@ def load_json(path):
         return json.load(f)
 
 
-def replace_url(url):
-    # Replace some URLs for easier data point collection.
+def replace_host(url):
+    # Replace host to an alternative if available.
     pu = urlparse(url)
-    if pu.netloc == "twitter.com":
-        newpu = pu._replace(netloc="nitter.eu")
+    if pu.netloc in Config.host_replaces:
+        newpu = pu._replace(netloc=Config.host_replaces[pu.netloc])
         newurl = urlunparse(newpu)
         return newurl
     return url
@@ -478,7 +479,7 @@ def make_hint(met_meta):
             parts.append('"' + aname + '"')
         aurl = am.get("url")
         if aurl:
-            parts.append(replace_url(aurl))
+            parts.append(replace_host(aurl))
     hint = " ".join(parts) if parts else met_meta.rpath
     return hint
 
@@ -768,6 +769,18 @@ def cmd_entry(args):
         raise TsuError("I don't know what path(s) to walk. Set the path arg,"
                        " or -p, or -c.")
 
+    replaces = args.replaces
+    if replaces:
+        if not len(replaces) % 2 == 0:
+            raise TsuError("List of host replaces must have an even length.")
+        it = iter(replaces)
+        try:
+            while True:
+                k, v = next(it), next(it)
+                Config.host_replaces[k] = v
+        except StopIteration:
+            pass
+
     print("Interactive data entry mode.")
     print("Make sure your system time is accurate (UTC):",
           format(datetime.utcfromtimestamp(int(time.time()))))
@@ -882,6 +895,10 @@ def make_arg_parser():
         help="List file with paths to enter data in, one path per line."
              " Paths may be files or directories and must be *relative* to the"
              " collection data dir (-c).")
+    entry.add_argument(
+        "-r", "--replaces", nargs="*",
+        metavar="HOST",
+        help="Host replacement pairs separated by space")
     entry.set_defaults(func=cmd_entry)
 
     return parser
