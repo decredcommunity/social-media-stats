@@ -717,7 +717,17 @@ def entry_path(path, coll_data_dir, coll_meta):
         else:
             met_icpath = os.path.relpath(met_rpath, coll_data_dir)
         met_meta = metric_meta(met_rpath, met_icpath, coll_meta)
-        entry_file(met_meta)
+
+        enabled = True
+        acc_meta = met_meta.account_meta
+        if acc_meta:
+            # Allow missing key.
+            enabled = acc_meta.get("update_enabled", True)
+
+        if enabled:
+            entry_file(met_meta)
+        else:
+            print("Skipping '{}': Account update disabled".format(met_rpath))
 
 
 def cmd_entry(args):
