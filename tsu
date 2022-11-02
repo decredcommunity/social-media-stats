@@ -643,17 +643,35 @@ def make_prompt_prefix(met_meta):
 
 
 def entry_file(met_meta):
-    prompt_prefix = make_prompt_prefix(met_meta)
-    printer = lambda s: print(prompt_prefix + s)
-
-    printer("Capture the value for " + make_hint(met_meta))
-
     valtype = met_meta.value_type
     # Read all to know the length.
     rows = list(csv_iter(met_meta.rpath))
     last_dt, last_val = None, None
     if len(rows) > 0:
+        # Read last value.
         last_dt, last_val = parse_record(rows[-1], valtype)
+        # Calculate "freshness" of the last value.
+        acc_meta = met_meta.account_meta
+        if acc_meta:
+            # Allow missing key. Default to update once a day.
+            interval = acc_meta.get("update_interval", 86400)
+            now_ts = int(datetime.now(timezone.utc).timestamp())
+            last_ts = int(last_dt.replace(tzinfo=timezone.utc).timestamp())
+            age = now_ts - last_ts
+            if age < 0:
+                warn("Skipping '{}': Last record timestamp ({}) is in the"
+                     " future OR your clock is wrong. Please fix this file"
+                     " manually.".format(met_meta.rpath, last_dt))
+                return
+            elif age < interval:
+                print("Skipping '{}': Metric last updated {} sec ago (<{})"
+                      "".format(met_meta.rpath, age, interval))
+                return
+
+    prompt_prefix = make_prompt_prefix(met_meta)
+    printer = lambda s: print(prompt_prefix + s)
+    printer("Capture the value for " + make_hint(met_meta))
+    if last_dt is not None:
         # Extra output for a sanity check.
         printer("Last record is: time {}, value {}".format(last_dt, last_val))
 
