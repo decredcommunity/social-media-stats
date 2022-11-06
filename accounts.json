@@ -206,6 +206,7 @@
   },
   {
     "path": "medium.com/decreddrive",
+    "update_enabled": false,
     "url": "https://medium.com/@decreddrive"
   },
   {
@@ -225,6 +226,7 @@
   {
     "note": "method of counting improved sometime before 2019-08-01",
     "path": "politeia/proposals.decred.org",
+    "update_enabled": false,
     "url": "https://proposals.decred.org"
   },
   {
@@ -237,6 +239,7 @@
   },
   {
     "path": "slack.com/decred",
+    "update_enabled": false,
     "url": "https://decred.slack.com"
   },
   {
@@ -255,11 +258,13 @@
   },
   {
     "path": "t.me/DecredAgg",
+    "update_enabled": false,
     "url": "https://t.me/DecredAgg"
   },
   {
     "path": "t.me/DecredArg",
     "tags": ["regional"],
+    "update_enabled": false,
     "url": "https://t.me/DecredArg"
   },
   {
@@ -461,6 +466,7 @@
     "created_utc": "2018-02-27",
     "path": "twitter.com/lefebvre_dustin",
     "tags": ["personal"],
+    "update_enabled": false,
     "url": "https://twitter.com/lefebvre_dustin"
   },
   {
@@ -483,11 +489,13 @@
   {
     "created_utc": "2019-09-03",
     "path": "twitter.com/planetdecred",
+    "update_enabled": false,
     "url": "https://twitter.com/planetdecred"
   },
   {
     "created_utc": "2020-09-14",
     "path": "twitter.com/winatoms",
+    "update_enabled": false,
     "url": "https://twitter.com/winatoms"
   },
   {
