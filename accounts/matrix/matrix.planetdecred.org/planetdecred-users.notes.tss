@@ -1,2 +1,2 @@
-1598980440,assuming that value 151 was due to a homeserver API bug
-1600209141,assuming that value 152 was due to a homeserver API bug
+1598980440,Removed value 151. Assuming it was a homeserver API bug.
+1600209141,Removed value 152. Assuming it was a homeserver API bug.

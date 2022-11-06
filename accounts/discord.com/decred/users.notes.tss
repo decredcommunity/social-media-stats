@@ -1,3 +1,3 @@
-1614814885,"server Prune was used, kicking non-verified accounts that hadn't logged in in over 30 days"
-1651526195,Data point 2293 originated from https://github.com/xaur/decred-news/commit/5a94772
-1659394606,1765 is after pruning users inactive for 30 ays
+1614814885,Server Prune was used. Kicked non-verified accounts that hadn't logged in in over 30 days.
+1651526195,Data point 2293 originated from https://github.com/xaur/decred-news/commit/5a94772 .
+1659394606,Server Prune was used. 1765 is after pruning users inactive for 30 days.
