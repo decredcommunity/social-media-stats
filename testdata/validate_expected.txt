@@ -10,3 +10,4 @@ Err testdata/ints.tsi:1: Value is not an integer: ''
 Err testdata/ints.tsi:2: Value is not an integer: 'abc'
 Err testdata/ints.tsi:3: Value is not an integer: '1.1'
 Err testdata/strings.tss:1: Value is empty
+Checked 5 files
