@@ -44,7 +44,7 @@
   },
   {
     "created_utc": "2016-08-17",
-    "note": "operated by @alexsolo",
+    "notes": "Operated by @alexsolo .Shady account.",
     "path": "facebook.com/Decredcash",
     "update_interval": 2592000,
     "url": "https://www.facebook.com/Decredcash/"
@@ -58,7 +58,7 @@
   },
   {
     "created_utc": "2016-01-09",
-    "note": "private group",
+    "notes": "Private group (but stats are public).",
     "path": "facebook.com/decredbrasil",
     "tags": ["regional"],
     "update_interval": 2592000,
@@ -160,61 +160,61 @@
     "url": "https://www.linkedin.com/company/decredproject"
   },
   {
-    "note": "https://decred.org/matrix/",
+    "notes": "Self-hosted Element at https://chat.decred.org/ .",
     "path": "matrix/matrix.decred.org",
     "update_interval": 1296000,
     "url": "matrix.decred.org",
     "metrics": [
       {
-        "id": "dcr-users",
+        "id": "dcr_members",
         "url": "https://matrix.to/#/#dcr:decred.org/",
         "url_alt": "https://matrix.to/#/!QhkLAKEeDrzTQObIxK:decred.org/"
       },
       {
-        "id": "dev-users",
+        "id": "dev_members",
         "url": "https://matrix.to/#/#dev:decred.org/",
         "url_alt": "https://matrix.to/#/!zefvTnlxYHPKvJMThI:decred.org/"
       },
       {
-        "id": "dex-users",
+        "id": "dex_members",
         "url": "https://matrix.to/#/#dex:decred.org/",
         "url_alt": "https://matrix.to/#/!mlRZqBtfWHrcmgdTWB:decred.org/"
       },
       {
-        "id": "general-users",
+        "id": "general_members",
         "url": "https://matrix.to/#/#general:decred.org/",
         "url_alt": "https://matrix.to/#/!aNnAOHkWUdNcEXRGjJ:decred.org/"
       },
       {
-        "id": "proposals-users",
+        "id": "proposals_members",
         "url": "https://matrix.to/#/#proposals:decred.org/",
         "url_alt": "https://matrix.to/#/!qYpAAClAYrHaUIGkLs:decred.org/"
       },
       {
-        "id": "support-users",
+        "id": "support_members",
         "url": "https://matrix.to/#/#support:decred.org/",
         "url_alt": "https://matrix.to/#/!xUNvyzkFgiMjhvPbIi:decred.org/"
       },
       {
-        "id": "trading-users",
+        "id": "trading_members",
         "url": "https://matrix.to/#/#trading:decred.org/",
         "url_alt": "https://matrix.to/#/!lDZCzVQjFoJsXMPkvr:decred.org/"
       }
     ]
   },
   {
-    "note": "https://planetdecred.org/chat/",
+    "notes": "Self-hosted Element at https://planetdecred.org/chat/ . Self-hosted Matrix homeserver at matrix.planetdecred.org . Both may be down since ~2022-05, not sure.",
     "path": "matrix/matrix.planetdecred.org",
     "update_interval": 2592000,
     "url": "matrix.planetdecred.org",
     "metrics": [
       {
-        "id": "godcr-users",
+        "id": "godcr_members",
         "url": "https://matrix.to/#/#godcr:planetdecred.org/",
         "url_alt": "https://matrix.to/#/!GIjqjGSvlvacsZINXy:planetdecred.org/"
       },
       {
-        "id": "planetdecred-users",
+        "id": "planetdecred_members",
         "url": "https://matrix.to/#/#planetdecred:planetdecred.org/",
         "url_alt": "https://matrix.to/#/!gruHpujXftcsHcghjx:planetdecred.org/"
       }
@@ -260,7 +260,7 @@
     "url": "https://medium.com/@richardred"
   },
   {
-    "note": "method of counting improved sometime before 2019-08-01",
+    "notes": "Method of counting users improved sometime before 2019-08-01, but became impossible later.",
     "path": "politeia/proposals.decred.org",
     "update_enabled": false,
     "url": "https://proposals.decred.org"
@@ -351,7 +351,7 @@
     "path": "t.me/decred_cn",
     "tags": ["regional"],
     "update_interval": 2592000,
-    "url": "http://t.me/decred_cn"
+    "url": "https://t.me/decred_cn"
   },
   {
     "path": "t.me/decredarabia",
@@ -462,7 +462,7 @@
   },
   {
     "created_utc": "2019-08-10",
-    "note": "unofficial w.r.t. the Decred in Depth podcast, operated by @OfficialCryptos",
+    "notes": "Unofficial (not operated by Decred in Depth podcast hosts), operated by @OfficialCryptos .",
     "path": "twitter.com/DecredinDepth",
     "update_interval": 5184000,
     "url": "https://twitter.com/DecredinDepth"
@@ -549,7 +549,7 @@
   },
   {
     "created_utc": "2014-12-16",
-    "note": "The username was `lukebp_`, then `lukebp`, then the account was removed.",
+    "notes": "The username was `lukebp_`, then `lukebp`, then the account was removed, then possibly recreated but made private.",
     "path": "twitter.com/lukebp",
     "tags": ["personal"],
     "update_interval": 2592000,
