@@ -71,7 +71,7 @@
     "url": "https://www.facebook.com/groups/decredbrasil/",
     "metrics": [
       {
-        "name": "active_7d",
+        "name": "members_active_7d",
         "update_enabled": false
       }
     ]
@@ -623,11 +623,11 @@
     "url": "https://vk.com/decred_project",
     "metrics": [
       {
-        "name": "unique_views",
+        "name": "views_unique",
         "update_enabled": false
       },
       {
-        "name": "unique_visitors",
+        "name": "visitors_unique",
         "update_enabled": false
       }
     ]
