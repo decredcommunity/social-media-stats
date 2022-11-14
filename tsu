@@ -262,7 +262,13 @@ def coll_env(args, data="none", meta="none"):
 
         if coll_meta_path is not None:
             try:
-                coll_meta = index_list(load_json(coll_meta_path), key="path")
+                coll_meta_raw = load_json(coll_meta_path)
+                for acc in coll_meta_raw:
+                    if "metrics" in acc:
+                        # Convert metrics list to a dict.
+                        acc["metrics"] = index_list(acc["metrics"], key="name")
+                # Convert accounts list to a dict.
+                coll_meta = index_list(coll_meta_raw, key="path")
                 print("Loaded {} accounts metadata from: {}"
                       "".format(len(coll_meta), coll_meta_path))
             except FileNotFoundError:
@@ -736,16 +742,24 @@ def entry_path(path, coll_data_dir, coll_meta):
             met_icpath = os.path.relpath(met_rpath, coll_data_dir)
         met_meta = metric_meta(met_rpath, met_icpath, coll_meta)
 
-        enabled = True
+        acc_enabled, met_enabled = True, True
         acc_meta = met_meta.account_meta
         if acc_meta:
-            # Allow missing key.
-            enabled = acc_meta.get("update_enabled", True)
+            # Allow missing key. Update is enabled by default.
+            acc_enabled = acc_meta.get("update_enabled", True)
+            if acc_enabled:
+                acc_metrics = acc_meta.get("metrics")
+                if acc_metrics:
+                    acc_met_meta = acc_metrics.get(met_meta.name)
+                    if acc_met_meta:
+                        # Allow missing key. Update is enabled by default.
+                        met_enabled = acc_met_meta.get("update_enabled", True)
 
-        if enabled:
+        if acc_enabled and met_enabled:
             entry_file(met_meta)
         else:
-            print("Skipping '{}': Account update disabled".format(met_rpath))
+            level = "Account" if (not acc_enabled) else "Metric"
+            print("Skipping '{}': {} update disabled".format(met_rpath, level))
 
 
 def cmd_entry(args):
