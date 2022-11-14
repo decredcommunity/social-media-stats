@@ -12,7 +12,13 @@
   {
     "path": "discord.com/decred",
     "update_interval": 1123200,
-    "url": "https://discord.gg/GJ2GXfz"
+    "url": "https://discord.gg/GJ2GXfz",
+    "metrics": [
+      {
+        "name": "members_verified_to_post",
+        "update_enabled": false
+      }
+    ]
   },
   {
     "created_utc": "2018-09-17",
@@ -62,7 +68,13 @@
     "path": "facebook.com/decredbrasil",
     "tags": ["regional"],
     "update_interval": 2246400,
-    "url": "https://www.facebook.com/groups/decredbrasil/"
+    "url": "https://www.facebook.com/groups/decredbrasil/",
+    "metrics": [
+      {
+        "name": "active_7d",
+        "update_enabled": false
+      }
+    ]
   },
   {
     "created_utc": "2016-01-09",
@@ -166,37 +178,37 @@
     "url": "matrix.decred.org",
     "metrics": [
       {
-        "id": "dcr_members",
+        "name": "dcr_members",
         "url": "https://matrix.to/#/#dcr:decred.org/",
         "url_alt": "https://matrix.to/#/!QhkLAKEeDrzTQObIxK:decred.org/"
       },
       {
-        "id": "dev_members",
+        "name": "dev_members",
         "url": "https://matrix.to/#/#dev:decred.org/",
         "url_alt": "https://matrix.to/#/!zefvTnlxYHPKvJMThI:decred.org/"
       },
       {
-        "id": "dex_members",
+        "name": "dex_members",
         "url": "https://matrix.to/#/#dex:decred.org/",
         "url_alt": "https://matrix.to/#/!mlRZqBtfWHrcmgdTWB:decred.org/"
       },
       {
-        "id": "general_members",
+        "name": "general_members",
         "url": "https://matrix.to/#/#general:decred.org/",
         "url_alt": "https://matrix.to/#/!aNnAOHkWUdNcEXRGjJ:decred.org/"
       },
       {
-        "id": "proposals_members",
+        "name": "proposals_members",
         "url": "https://matrix.to/#/#proposals:decred.org/",
         "url_alt": "https://matrix.to/#/!qYpAAClAYrHaUIGkLs:decred.org/"
       },
       {
-        "id": "support_members",
+        "name": "support_members",
         "url": "https://matrix.to/#/#support:decred.org/",
         "url_alt": "https://matrix.to/#/!xUNvyzkFgiMjhvPbIi:decred.org/"
       },
       {
-        "id": "trading_members",
+        "name": "trading_members",
         "url": "https://matrix.to/#/#trading:decred.org/",
         "url_alt": "https://matrix.to/#/!lDZCzVQjFoJsXMPkvr:decred.org/"
       }
@@ -209,12 +221,13 @@
     "url": "matrix.planetdecred.org",
     "metrics": [
       {
-        "id": "godcr_members",
+        "name": "godcr_members",
+        "update_enabled": false,
         "url": "https://matrix.to/#/#godcr:planetdecred.org/",
         "url_alt": "https://matrix.to/#/!GIjqjGSvlvacsZINXy:planetdecred.org/"
       },
       {
-        "id": "planetdecred_members",
+        "name": "planetdecred_members",
         "url": "https://matrix.to/#/#planetdecred:planetdecred.org/",
         "url_alt": "https://matrix.to/#/!gruHpujXftcsHcghjx:planetdecred.org/"
       }
@@ -295,7 +308,13 @@
     "path": "t.me/DecredAfrica",
     "tags": ["regional"],
     "update_interval": 4665600,
-    "url": "https://t.me/DecredAfrica"
+    "url": "https://t.me/DecredAfrica",
+    "metrics": [
+      {
+        "name": "members_online",
+        "update_enabled": false
+      }
+    ]
   },
   {
     "path": "t.me/DecredAgg",
@@ -351,7 +370,13 @@
     "path": "t.me/decred_cn",
     "tags": ["regional"],
     "update_interval": 2246400,
-    "url": "https://t.me/decred_cn"
+    "url": "https://t.me/decred_cn",
+    "metrics": [
+      {
+        "name": "members_online",
+        "update_enabled": false
+      }
+    ]
   },
   {
     "path": "t.me/decredarabia",
@@ -369,7 +394,13 @@
     "path": "t.me/decredvietnam",
     "tags": ["regional"],
     "update_interval": 2246400,
-    "url": "https://t.me/decredvietnam"
+    "url": "https://t.me/decredvietnam",
+    "metrics": [
+      {
+        "name": "members_online",
+        "update_enabled": false
+      }
+    ]
   },
   {
     "created_utc": "2019-07-18",
@@ -589,7 +620,17 @@
   {
     "path": "vk.com/decred_project",
     "update_interval": 2246400,
-    "url": "https://vk.com/decred_project"
+    "url": "https://vk.com/decred_project",
+    "metrics": [
+      {
+        "name": "unique_views",
+        "update_enabled": false
+      },
+      {
+        "name": "unique_visitors",
+        "update_enabled": false
+      }
+    ]
   },
   {
     "created_utc": "2020-05-27",
