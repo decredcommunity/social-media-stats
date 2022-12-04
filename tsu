@@ -670,8 +670,8 @@ def entry_file(met_meta):
                      " manually.".format(met_meta.rpath, last_dt))
                 return
             elif age < interval:
-                print("Skipping '{}': Metric last updated {} sec ago (<{})"
-                      "".format(met_meta.rpath, age, interval))
+                print("Skipping '{}': Metric is fresh (updated {:.1f} days ago < {:.1f})"
+                      "".format(met_meta.rpath, age / 86400, interval / 86400))
                 return
 
     prompt_prefix = make_prompt_prefix(met_meta)
