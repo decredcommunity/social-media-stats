@@ -12,13 +12,7 @@
   {
     "path": "discord.com/decred",
     "update_interval": 1123200,
-    "url": "https://discord.gg/GJ2GXfz",
-    "metrics": [
-      {
-        "name": "members_verified_to_post",
-        "update_enabled": false
-      }
-    ]
+    "url": "https://discord.gg/GJ2GXfz"
   },
   {
     "created_utc": "2018-09-17",
@@ -583,7 +577,7 @@
     "notes": "The username was `lukebp_`, then `lukebp`, then the account was removed, then possibly recreated but made private.",
     "path": "twitter.com/lukebp",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_enabled": false,
     "url": "https://twitter.com/lukebp"
   },
   {
