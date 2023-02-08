@@ -47,7 +47,14 @@
     "notes": "Operated by @alexsolo .Shady account.",
     "path": "facebook.com/Decredcash",
     "update_interval": 2246400,
-    "url": "https://www.facebook.com/Decredcash/"
+    "url": "https://www.facebook.com/Decredcash/",
+    "metrics": [
+      {
+        "name": "followers",
+        "notes": "Disabled, use followers_rounded instead. Facebook shows rounded follower count since 2023-02",
+        "update_enabled": false
+      }
+    ]
   },
   {
     "created_utc": "2019-06-26",
@@ -66,6 +73,7 @@
     "metrics": [
       {
         "name": "members_active_7d",
+        "notes": "Disabled, no longer have access to this metric.",
         "update_enabled": false
       }
     ]
@@ -80,7 +88,14 @@
     "created_utc": "2016-03-24",
     "path": "facebook.com/decredproject",
     "update_interval": 2246400,
-    "url": "https://www.facebook.com/decredproject/"
+    "url": "https://www.facebook.com/decredproject/",
+    "metrics": [
+      {
+        "name": "followers",
+        "notes": "Disabled, use followers_rounded instead. Facebook shows rounded follower count since 2022-10",
+        "update_enabled": false
+      }
+    ]
   },
   {
     "created_utc": "2020-05",
@@ -216,6 +231,7 @@
     "metrics": [
       {
         "name": "godcr_members",
+        "notes": "Disabled, no longer have access to this room.",
         "update_enabled": false,
         "url": "https://matrix.to/#/#godcr:planetdecred.org/",
         "url_alt": "https://matrix.to/#/!GIjqjGSvlvacsZINXy:planetdecred.org/"
@@ -618,10 +634,12 @@
     "metrics": [
       {
         "name": "views_unique",
+        "notes": "Disabled, no longer have access to this metric.",
         "update_enabled": false
       },
       {
         "name": "visitors_unique",
+        "notes": "Disabled, no longer have access to this metric.",
         "update_enabled": false
       }
     ]
@@ -654,6 +672,13 @@
     "url_alt": [
       "https://www.youtube.com/c/DecredChannel",
       "https://www.youtube.com/decredchannel"
+    ],
+    "metrics": [
+      {
+        "name": "subscribers",
+        "notes": "Disabled, use subscribers_rounded instead. YouTube UI shows rounded subscriber count since like 2019?",
+        "update_enabled": false
+      }
     ]
   },
   {
