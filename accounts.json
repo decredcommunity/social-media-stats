@@ -11,42 +11,42 @@
   },
   {
     "path": "discord.com/decred",
-    "update_interval": 1123200,
+    "update_interval": 864000,
     "url": "https://discord.gg/GJ2GXfz"
   },
   {
     "created_utc": "2018-09-17",
     "path": "facebook.com/Decred-Arabia",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.facebook.com/DecredArabia/"
   },
   {
     "created_utc": "2018-06-14",
     "path": "facebook.com/DecredChinese",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.facebook.com/DecredChinese/"
   },
   {
     "created_utc": "2019-04-17",
     "path": "facebook.com/DecredESP",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.facebook.com/DecredESP/"
   },
   {
     "created_utc": "2018-01-31",
     "path": "facebook.com/DecredPolska",
     "tags": ["regional"],
-    "update_interval": 4665600,
+    "update_interval": 4320000,
     "url": "https://www.facebook.com/DecredPolska/"
   },
   {
     "created_utc": "2016-08-17",
     "notes": "Operated by @alexsolo .Shady account.",
     "path": "facebook.com/Decredcash",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.facebook.com/Decredcash/",
     "metrics": [
       {
@@ -60,7 +60,7 @@
     "created_utc": "2019-06-26",
     "path": "facebook.com/decredau",
     "tags": ["regional"],
-    "update_interval": 4665600,
+    "update_interval": 4320000,
     "url": "https://www.facebook.com/decredau/"
   },
   {
@@ -68,7 +68,7 @@
     "notes": "Private group (but stats are public).",
     "path": "facebook.com/decredbrasil",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.facebook.com/groups/decredbrasil/",
     "metrics": [
       {
@@ -81,13 +81,13 @@
   {
     "created_utc": "2016-01-09",
     "path": "facebook.com/decredinternational",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.facebook.com/groups/decredinternational/"
   },
   {
     "created_utc": "2016-03-24",
     "path": "facebook.com/decredproject",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.facebook.com/decredproject/",
     "metrics": [
       {
@@ -100,90 +100,90 @@
   {
     "created_utc": "2020-05",
     "path": "gab.com/decredproject",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://gab.com/decredproject"
   },
   {
     "path": "github.com/btcsuite/btcd",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://github.com/btcsuite/btcd"
   },
   {
     "path": "github.com/btcsuite/btcwallet",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://github.com/btcsuite/btcwallet"
   },
   {
     "path": "github.com/decred/dcrd",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://github.com/decred/dcrd"
   },
   {
     "path": "github.com/decred/dcrdata",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://github.com/decred/dcrdata"
   },
   {
     "path": "github.com/decred/dcrdex",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://github.com/decred/dcrdex"
   },
   {
     "path": "github.com/decred/dcrtime",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://github.com/decred/dcrtime"
   },
   {
     "path": "github.com/decred/dcrwallet",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://github.com/decred/dcrwallet"
   },
   {
     "path": "github.com/decred/decrediton",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://github.com/decred/decrediton"
   },
   {
     "path": "github.com/decred/politeia",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://github.com/decred/politeia"
   },
   {
     "path": "instagram.com/decred_es",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.instagram.com/decred_es/"
   },
   {
     "path": "instagram.com/decredbr",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.instagram.com/decredbr/"
   },
   {
     "path": "instagram.com/decredproject",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.instagram.com/decredproject/"
   },
   {
     "path": "linkedin.com/dcrdex",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.linkedin.com/showcase/dcrdex"
   },
   {
     "path": "linkedin.com/decred-politeia",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.linkedin.com/showcase/decred-politeia"
   },
   {
     "path": "linkedin.com/decredproject",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.linkedin.com/company/decredproject"
   },
   {
     "notes": "Self-hosted Element at https://chat.decred.org/ .",
     "path": "matrix/matrix.decred.org",
-    "update_interval": 1123200,
+    "update_interval": 864000,
     "url": "matrix.decred.org",
     "metrics": [
       {
@@ -226,7 +226,7 @@
   {
     "notes": "Self-hosted Element at https://planetdecred.org/chat/ . Self-hosted Matrix homeserver at matrix.planetdecred.org . Both may be down since ~2022-05, not sure.",
     "path": "matrix/matrix.planetdecred.org",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "matrix.planetdecred.org",
     "metrics": [
       {
@@ -246,18 +246,18 @@
   {
     "path": "medium.com/Ammarooni",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://medium.com/@Ammarooni"
   },
   {
     "path": "medium.com/_Checkmatey_",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://medium.com/@_Checkmatey_"
   },
   {
     "path": "medium.com/decred",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://medium.com/decred"
   },
   {
@@ -268,18 +268,18 @@
   {
     "path": "medium.com/permabullnino",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://medium.com/@permabullnino"
   },
   {
     "path": "medium.com/politeia-digest",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://medium.com/politeia-digest"
   },
   {
     "path": "medium.com/richardred",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://medium.com/@richardred"
   },
   {
@@ -290,12 +290,12 @@
   },
   {
     "path": "reddit.com/DCR",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.reddit.com/r/DCR/"
   },
   {
     "path": "reddit.com/decred",
-    "update_interval": 1123200,
+    "update_interval": 864000,
     "url": "https://www.reddit.com/r/decred/"
   },
   {
@@ -306,7 +306,7 @@
   {
     "created_utc": "2021-03-10",
     "path": "t.me/DCRann",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://t.me/DCRann"
   },
   {
@@ -317,7 +317,7 @@
   {
     "path": "t.me/DecredAfrica",
     "tags": ["regional"],
-    "update_interval": 4665600,
+    "update_interval": 4320000,
     "url": "https://t.me/DecredAfrica",
     "metrics": [
       {
@@ -340,46 +340,46 @@
   {
     "path": "t.me/DecredES",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://t.me/DecredES"
   },
   {
     "path": "t.me/DecredItalia",
     "tags": ["regional"],
-    "update_interval": 4665600,
+    "update_interval": 4320000,
     "url": "https://t.me/DecredItalia"
   },
   {
     "path": "t.me/DecredSupport",
-    "update_interval": 1123200,
+    "update_interval": 864000,
     "url": "https://t.me/DecredSupport"
   },
   {
     "path": "t.me/DecredTrading",
-    "update_interval": 1123200,
+    "update_interval": 864000,
     "url": "https://t.me/DecredTrading"
   },
   {
     "path": "t.me/Decred_RU",
     "tags": ["regional"],
-    "update_interval": 4665600,
+    "update_interval": 4320000,
     "url": "https://t.me/Decred_RU"
   },
   {
     "path": "t.me/dcrtktsplit",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://t.me/dcrtktsplit"
   },
   {
     "path": "t.me/decredES_devs",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://t.me/decredES_devs"
   },
   {
     "path": "t.me/decred_cn",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://t.me/decred_cn",
     "metrics": [
       {
@@ -391,180 +391,180 @@
   {
     "path": "t.me/decredarabia",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://t.me/decredarabia"
   },
   {
     "path": "t.me/decredbr",
     "tags": ["regional"],
-    "update_interval": 1123200,
+    "update_interval": 864000,
     "url": "https://t.me/decredbr"
   },
   {
     "path": "t.me/decredvietnam",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://t.me/decredvietnam",
     "metrics": [
       {
         "name": "members_online",
-        "update_enabled": false
+        "update_enabled": true
       }
     ]
   },
   {
     "created_utc": "2022-12-15",
     "path": "twitter.com/BisonRelay",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/BisonRelay"
   },
   {
     "created_utc": "2019-07-18",
     "path": "twitter.com/BlockCommons",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/BlockCommons"
   },
   {
     "created_utc": "2020-02-21",
     "path": "twitter.com/ConsensusRough",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/ConsensusRough"
   },
   {
     "created_utc": "2018-11-04",
     "path": "twitter.com/DecredArabia",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/DecredArabia"
   },
   {
     "created_utc": "2018-08-18",
     "path": "twitter.com/DecredAustralia",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/DecredAustralia"
   },
   {
     "created_utc": "2021-01-19",
     "path": "twitter.com/DecredKorea",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/DecredKorea"
   },
   {
     "created_utc": "2021-01-16",
     "path": "twitter.com/DecredNederland",
-    "update_interval": 4665600,
+    "update_interval": 4320000,
     "url": "https://twitter.com/DecredNederland"
   },
   {
     "created_utc": "2020-05-26",
     "path": "twitter.com/DecredSociety",
-    "update_interval": 1123200,
+    "update_interval": 864000,
     "url": "https://twitter.com/DecredSociety"
   },
   {
     "created_utc": "2018-02-03",
     "path": "twitter.com/Decred_BR",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/Decred_BR"
   },
   {
     "created_utc": "2018-06-13",
     "path": "twitter.com/Decred_CA",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/Decred_CA"
   },
   {
     "path": "twitter.com/Decred_ES",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/Decred_ES"
   },
   {
     "path": "twitter.com/Decred_ITA",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/Decred_ITA"
   },
   {
     "created_utc": "2010-06-27",
     "path": "twitter.com/Decred_News",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/Decred_News"
   },
   {
     "created_utc": "2018-01-30",
     "path": "twitter.com/Decred_PL",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/Decred_PL"
   },
   {
     "path": "twitter.com/Decred_africa",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/Decred_africa"
   },
   {
     "created_utc": "2019-08-10",
     "notes": "Unofficial (not operated by Decred in Depth podcast hosts), operated by @OfficialCryptos .",
     "path": "twitter.com/DecredinDepth",
-    "update_interval": 4665600,
+    "update_interval": 4320000,
     "url": "https://twitter.com/DecredinDepth"
   },
   {
     "created_utc": "2014-09-14",
     "path": "twitter.com/NoahPierau",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/NoahPierau"
   },
   {
     "created_utc": "2011-03-19",
     "path": "twitter.com/PermabullNino",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/PermabullNino"
   },
   {
     "created_utc": "2018-03-01",
     "path": "twitter.com/RichardRed0x",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/RichardRed0x"
   },
   {
     "created_utc": "2020-10-23",
     "path": "twitter.com/StakeShuffle_",
-    "update_interval": 1123200,
+    "update_interval": 864000,
     "url": "https://twitter.com/StakeShuffle_"
   },
   {
     "created_utc": "2018-01-12",
     "path": "twitter.com/_Checkmatey_",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/_Checkmatey_"
   },
   {
     "created_utc": "2013-02-10",
     "path": "twitter.com/behindtext",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/behindtext"
   },
   {
     "created_utc": "2019-12-30",
     "path": "twitter.com/decreddrive",
-    "update_interval": 4665600,
+    "update_interval": 4320000,
     "url": "https://twitter.com/decreddrive"
   },
   {
     "created_utc": "2018-12-26",
     "path": "twitter.com/decredexplorer",
-    "update_interval": 4665600,
+    "update_interval": 4320000,
     "url": "https://twitter.com/decredexplorer"
   },
   {
@@ -577,14 +577,14 @@
     "past_url": "https://twitter.com/coveryfire7777",
     "path": "twitter.com/exitusdcr",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/exitusdcr"
   },
   {
     "created_utc": "2010-08-11",
     "path": "twitter.com/jz_bz",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/jz_bz"
   },
   {
@@ -606,12 +606,12 @@
     "created_utc": "2017-04-04",
     "path": "twitter.com/michae2xl",
     "tags": ["personal"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/michae2xl"
   },
   {
     "path": "twitter.com/pi_crumbs",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/pi_crumbs"
   },
   {
@@ -630,12 +630,12 @@
     "created_utc": "2020-06-14",
     "description": "Learn about Decred - a superior store of value. A community driven portal.",
     "path": "twitter.com/withdecred",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://twitter.com/withdecred"
   },
   {
     "path": "vk.com/decred_project",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://vk.com/decred_project",
     "metrics": [
       {
@@ -655,7 +655,7 @@
     "name": "Decred Arabia",
     "path": "youtube.com/decredarabia",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.youtube.com/channel/UCCtB2BfsA2VdT0FJXpsYICA"
   },
   {
@@ -663,7 +663,7 @@
     "name": "Decred Brasil Oficial",
     "path": "youtube.com/decredbrasil",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.youtube.com/channel/UC73wa2ddXuPWsmenVfeFTYg",
     "url_alt": [
       "https://www.youtube.com/c/DecredBrasilOficial"
@@ -674,7 +674,7 @@
     "name": "Decred",
     "path": "youtube.com/decredchannel",
     "url": "https://www.youtube.com/channel/UCJ2bYDaPYHpSmJPh_M5dNSg",
-    "update_interval": 1123200,
+    "update_interval": 864000,
     "url_alt": [
       "https://www.youtube.com/c/DecredChannel",
       "https://www.youtube.com/decredchannel"
@@ -691,7 +691,7 @@
     "created_utc": "2008-05-29",
     "name": "Society Decentralised",
     "path": "youtube.com/decredsociety",
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.youtube.com/channel/UCZSFAqUMp8v58eEQl_bzWYg",
     "url_alt": [
       "https://www.youtube.com/c/DecredSociety",
@@ -703,7 +703,7 @@
     "name": "Decred en Espa\u00f1ol",
     "path": "youtube.com/decredspanish",
     "tags": ["regional"],
-    "update_interval": 2246400,
+    "update_interval": 1728000,
     "url": "https://www.youtube.com/channel/UCCprOo4gR1vsjJTAzv8BMBQ",
     "url_alt": [
       "https://www.youtube.com/c/DecredenEspañol"
