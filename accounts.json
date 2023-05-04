@@ -304,6 +304,13 @@
     "url": "https://decred.slack.com"
   },
   {
+    "notes": "Renamed from https://t.me/DecredTrading to https://t.me/BisonTime around 2023-05-02. Bridge with Matrix has been shutdown. Decred branding has been removed. All changes due to the amount of spam and trolling coming from Telegram that was hard to manage.",
+    "past_url": "https://t.me/DecredTrading",
+    "path": "t.me/BisonTime",
+    "update_interval": 864000,
+    "url": "https://t.me/BisonTime"
+  },
+  {
     "created_utc": "2021-03-10",
     "path": "t.me/DCRann",
     "update_interval": 1728000,
@@ -353,11 +360,6 @@
     "path": "t.me/DecredSupport",
     "update_interval": 864000,
     "url": "https://t.me/DecredSupport"
-  },
-  {
-    "path": "t.me/DecredTrading",
-    "update_interval": 864000,
-    "url": "https://t.me/DecredTrading"
   },
   {
     "path": "t.me/Decred_RU",
