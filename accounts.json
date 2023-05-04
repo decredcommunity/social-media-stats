@@ -305,10 +305,10 @@
   },
   {
     "notes": "Renamed from https://t.me/DecredTrading to https://t.me/BisonTime around 2023-05-02. Bridge with Matrix has been shutdown. Decred branding has been removed. All changes due to the amount of spam and trolling coming from Telegram that was hard to manage.",
-    "past_url": "https://t.me/DecredTrading",
     "path": "t.me/BisonTime",
     "update_interval": 864000,
-    "url": "https://t.me/BisonTime"
+    "url": "https://t.me/BisonTime",
+    "url_past": "https://t.me/DecredTrading"
   },
   {
     "created_utc": "2021-03-10",
@@ -576,11 +576,11 @@
   },
   {
     "created_utc": "2011-09-12",
-    "past_url": "https://twitter.com/coveryfire7777",
     "path": "twitter.com/exitusdcr",
     "tags": ["personal"],
     "update_interval": 1728000,
-    "url": "https://twitter.com/exitusdcr"
+    "url": "https://twitter.com/exitusdcr",
+    "url_past": "https://twitter.com/coveryfire7777"
   },
   {
     "created_utc": "2010-08-11",
