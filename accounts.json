@@ -100,7 +100,7 @@
   {
     "created_utc": "2020-05",
     "path": "gab.com/decredproject",
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://gab.com/decredproject"
   },
   {
@@ -247,7 +247,7 @@
   {
     "path": "medium.com/Ammarooni",
     "tags": ["personal"],
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://medium.com/@Ammarooni"
   },
   {
@@ -411,7 +411,8 @@
     "metrics": [
       {
         "name": "members_online",
-        "update_enabled": true
+        "notes": "Sometime it shows, sometimes it doesn't. Disabling anyway until this account shows any activity. [2023-08-01]",
+        "update_enabled": false
       }
     ]
   },
@@ -488,33 +489,33 @@
   {
     "path": "twitter.com/Decred_ITA",
     "tags": ["regional"],
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://twitter.com/Decred_ITA"
   },
   {
     "created_utc": "2010-06-27",
     "path": "twitter.com/Decred_News",
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://twitter.com/Decred_News"
   },
   {
     "created_utc": "2018-01-30",
     "path": "twitter.com/Decred_PL",
     "tags": ["regional"],
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://twitter.com/Decred_PL"
   },
   {
     "path": "twitter.com/Decred_africa",
     "tags": ["regional"],
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://twitter.com/Decred_africa"
   },
   {
     "created_utc": "2019-08-10",
     "notes": "Unofficial (not operated by Decred in Depth podcast hosts), operated by @OfficialCryptos .",
     "path": "twitter.com/DecredinDepth",
-    "update_interval": 4320000,
+    "update_interval": 6912000,
     "url": "https://twitter.com/DecredinDepth"
   },
   {
@@ -561,7 +562,7 @@
   {
     "created_utc": "2019-12-30",
     "path": "twitter.com/decreddrive",
-    "update_interval": 4320000,
+    "update_interval": 6912000,
     "url": "https://twitter.com/decreddrive"
   },
   {
