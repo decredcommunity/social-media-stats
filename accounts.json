@@ -18,21 +18,21 @@
     "created_utc": "2018-09-17",
     "path": "facebook.com/Decred-Arabia",
     "tags": ["regional"],
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://www.facebook.com/DecredArabia/"
   },
   {
     "created_utc": "2018-06-14",
     "path": "facebook.com/DecredChinese",
     "tags": ["regional"],
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://www.facebook.com/DecredChinese/"
   },
   {
     "created_utc": "2019-04-17",
     "path": "facebook.com/DecredESP",
     "tags": ["regional"],
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://www.facebook.com/DecredESP/"
   },
   {
@@ -44,9 +44,9 @@
   },
   {
     "created_utc": "2016-08-17",
-    "notes": "Operated by @alexsolo .Shady account.",
+    "notes": "Operated by @alexsolo. Shady account.",
     "path": "facebook.com/Decredcash",
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://www.facebook.com/Decredcash/",
     "metrics": [
       {
@@ -68,7 +68,7 @@
     "notes": "Private group (but stats are public).",
     "path": "facebook.com/decredbrasil",
     "tags": ["regional"],
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://www.facebook.com/groups/decredbrasil/",
     "metrics": [
       {
@@ -81,7 +81,7 @@
   {
     "created_utc": "2016-01-09",
     "path": "facebook.com/decredinternational",
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://www.facebook.com/groups/decredinternational/"
   },
   {
@@ -100,6 +100,7 @@
   {
     "created_utc": "2020-05",
     "path": "gab.com/decredproject",
+    "update_enabled": false,
     "update_interval": 4320000,
     "url": "https://gab.com/decredproject"
   },
@@ -431,6 +432,7 @@
   {
     "created_utc": "2020-02-21",
     "path": "twitter.com/ConsensusRough",
+    "update_enabled": false,
     "update_interval": 1728000,
     "url": "https://twitter.com/ConsensusRough"
   },
@@ -451,7 +453,7 @@
   {
     "created_utc": "2021-01-19",
     "path": "twitter.com/DecredKorea",
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://twitter.com/DecredKorea"
   },
   {
@@ -477,7 +479,7 @@
     "created_utc": "2018-06-13",
     "path": "twitter.com/Decred_CA",
     "tags": ["regional"],
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://twitter.com/Decred_CA"
   },
   {
@@ -634,7 +636,7 @@
     "created_utc": "2020-06-14",
     "description": "Learn about Decred - a superior store of value. A community driven portal.",
     "path": "twitter.com/withdecred",
-    "update_interval": 1728000,
+    "update_interval": 4320000,
     "url": "https://twitter.com/withdecred"
   },
   {
