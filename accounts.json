@@ -240,6 +240,7 @@
       },
       {
         "name": "planetdecred_members",
+        "update_enabled": false,
         "url": "https://matrix.to/#/#planetdecred:planetdecred.org/",
         "url_alt": "https://matrix.to/#/!gruHpujXftcsHcghjx:planetdecred.org/"
       }
